@@ -1,0 +1,72 @@
+[
+  {
+    "id": "offer-adr",
+    "name": "ADR s.r.o.",
+    "architect": "ADR s.r.o.",
+    "status": "odeslana",
+    "currency": "USD",
+    "createdAt": "2026-04-22T10:00:00Z",
+    "updatedAt": "2026-05-08T14:20:00Z",
+    "internalNote": "Klient preferuje Aged Brass kolekci napříč celým bytem. Slevy 20 % schváleny ředitelem.",
+    "items": [
+      { "id": "i-adr-1", "productId": "p-tl1233", "quantity": 3, "discountPercent": 20 },
+      { "id": "i-adr-2", "productId": "p-tl1044", "quantity": 1, "discountPercent": 20 },
+      { "id": "i-adr-3", "productId": "p-tt8741", "quantity": 4, "discountPercent": 20 },
+      { "id": "i-adr-4", "productId": "p-tt4969", "quantity": 4, "discountPercent": 20 },
+      { "id": "i-adr-5", "productId": "p-tt4966", "quantity": 2, "discountPercent": 20 },
+      { "id": "i-adr-6", "productId": "p-lb4942", "quantity": 6, "discountPercent": 20 },
+      { "id": "i-adr-7", "productId": "p-tt4973", "quantity": 4, "discountPercent": 20 },
+      { "id": "i-adr-8", "productId": "p-tl1198", "quantity": 1, "discountPercent": 20 },
+      { "id": "i-adr-9", "productId": "p-tl1519", "quantity": 1, "discountPercent": 20 }
+    ]
+  },
+  {
+    "id": "offer-nebusice",
+    "name": "RD Nebušice",
+    "architect": "AV Architekti, arch. Vodička",
+    "status": "okomentovana",
+    "currency": "CZK",
+    "createdAt": "2026-05-02T08:30:00Z",
+    "updatedAt": "2026-05-12T14:35:00Z",
+    "internalNote": "Velký rodinný dům, koupelna 2.08. Architekt už 1× komentoval — viz níže.",
+    "items": [
+      { "id": "i-neb-1", "productId": "p-dc1007bn", "quantity": 2, "discountPercent": 15 },
+      { "id": "i-neb-2", "productId": "p-co1201", "quantity": 2, "discountPercent": 15 },
+      { "id": "i-neb-3", "productId": "p-va17075", "quantity": 1, "discountPercent": 10 },
+      { "id": "i-neb-4", "productId": "p-va-vanovy-odtok", "quantity": 1, "discountPercent": 15 },
+      { "id": "i-neb-5", "productId": "p-do2001bn", "quantity": 1, "discountPercent": 15 },
+      { "id": "i-neb-6", "productId": "p-do3101bn", "quantity": 1, "discountPercent": 15 },
+      { "id": "i-neb-7", "productId": "p-co3101", "quantity": 1, "discountPercent": 15 },
+      { "id": "i-neb-8", "productId": "p-cb-hlavovasprcha", "quantity": 1, "discountPercent": 15 },
+      { "id": "i-neb-9", "productId": "p-co4016bn", "quantity": 1, "discountPercent": 15 },
+      { "id": "i-neb-10", "productId": "p-vg736552", "quantity": 1, "discountPercent": 15 },
+      { "id": "i-neb-11", "productId": "p-vg736569", "quantity": 1, "discountPercent": 15 },
+      { "id": "i-neb-12", "productId": "p-cielo-itvsktl", "quantity": 1, "discountPercent": 15 },
+      { "id": "i-neb-13", "productId": "p-cielo-cpvittf", "quantity": 1, "discountPercent": 15 },
+      { "id": "i-neb-14", "productId": "p-do7002bn", "quantity": 1, "discountPercent": 15 },
+      { "id": "i-neb-15", "productId": "p-cb-bidetova", "quantity": 1, "discountPercent": 20 },
+      { "id": "i-neb-16", "productId": "p-geda-smesovaci", "quantity": 1, "discountPercent": 25 },
+      { "id": "i-neb-17", "productId": "p-geda-podomitkovy", "quantity": 1, "discountPercent": 25 },
+      { "id": "i-neb-18", "productId": "p-alca-pm-wc", "quantity": 1, "discountPercent": 15 },
+      { "id": "i-neb-19", "productId": "p-co7021bn", "quantity": 1, "discountPercent": 15 },
+      { "id": "i-neb-20", "productId": "p-do7003bn", "quantity": 5, "discountPercent": 15 }
+    ]
+  },
+  {
+    "id": "offer-sedlacek",
+    "name": "Sedláček — koupelna",
+    "architect": "Vít Sedláček",
+    "status": "rozpracovana",
+    "currency": "CZK",
+    "createdAt": "2026-05-10T16:00:00Z",
+    "updatedAt": "2026-05-12T09:15:00Z",
+    "internalNote": "Pouze Radomonte sprchové sety. Klient zvažuje horizontální montáž — ověřit před objednáním.",
+    "items": [
+      { "id": "i-sed-1", "productId": "p-ktn3", "quantity": 1, "discountPercent": 20 },
+      { "id": "i-sed-2", "productId": "p-knn5", "quantity": 1, "discountPercent": 20, "note": "možná je i horizontální montáž" },
+      { "id": "i-sed-3", "productId": "p-inw5", "quantity": 1, "discountPercent": 20, "note": "nutno uvést před objednáním" },
+      { "id": "i-sed-4", "productId": "p-k21", "quantity": 1, "discountPercent": 20 },
+      { "id": "i-sed-5", "productId": "p-swn1", "quantity": 1, "discountPercent": 20 }
+    ]
+  }
+]
