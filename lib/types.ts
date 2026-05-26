@@ -50,7 +50,7 @@ export interface Offer {
   status: OfferStatus;
   currency: Currency;
   items: OfferItem[];
-  internalNote: string | null;
+  internalNote?: string | null;
   createdAt: string;
   updatedAt: string;
 }

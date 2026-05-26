@@ -22,13 +22,13 @@ export default async function NabidkaPublicPage({
     prisma.comment.findMany({ where: { offerId: dbOffer.id }, orderBy: { createdAt: "asc" }, select: commentSelect }),
   ]);
 
-  const offer = mapOffer(dbOffer);
+  const { internalNote: _stripped, ...publicOffer } = mapOffer(dbOffer);
   const snapProds = snapshotProducts(dbOffer.items);
   const comments = dbComments.map(mapComment);
 
   return (
     <NabidkaPublic
-      offer={offer}
+      offer={publicOffer}
       snapshotProducts={snapProds}
       initialComments={comments}
     />

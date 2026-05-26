@@ -28,7 +28,7 @@ export function NabidkaPublic({
   snapshotProducts,
   initialComments,
 }: {
-  offer: Offer;
+  offer: Omit<Offer, "internalNote">;
   snapshotProducts: Product[];
   initialComments: Comment[];
 }) {
