@@ -1,119 +1,143 @@
-# Developing
+# Developing — Farline Nabídky
 
-## Правила роботи з гілками
+## Ланцюг читання (читати по порядку перед будь-яким кодом)
+
+Це не просто список — це послідовність. Кожен документ будується на попередньому. Пропускати не можна.
+
+```
+1. ONBOARDING.md           ← точка входу, загальний контекст
+2. docs/PRD.md             ← що будуємо: ролі, acceptance-критерії, §3 матриця «є→доробити», §9 заборони
+3. docs/TECH-SPEC.md       ← як будуємо: стек, Prisma-схема §3, API §5, auth §4, ENV §8, інфра §9
+4. docs/DESIGN-SYSTEM.md   ← заморожений візуал: токени, компоненти, анімації, чек-лист §9
+5. docs/IMPLEMENTATION-PLAN.md ← поточний блок роботи та залежності між блоками
+6. desc-from-contract.md   ← юридичне ТЗ (Příloha č. 1), на нього посилається PRD
+```
+
+Після прочитання — перевірити поточний блок у `IMPLEMENTATION-PLAN.md` і йти від нього.
+
+---
+
+## Поточний стан проєкту
+
+**Є:** рабочий клієнтський прототип (Next.js 16 + React 19 + Tailwind v4), UI узгоджений клієнтом і заморожений. Дані живуть in-memory у `lib/store.tsx`, скидаються при перезавантаженні.
+
+**Немає:** БД, авторизація, реальна пошта, реальний імпорт, збереження файлів на сервері.
+
+**Завдання:** підключити готовий UI до Postgres/Prisma + додати відсутній функціонал по блоках з `IMPLEMENTATION-PLAN.md`. **Не переписувати UI**.
+
+---
+
+## Правила гілок і PR
 
 - `main` — стабільна версія. Прямий push заборонений.
-- `develop` — основна гілка розробки.
-- Кожен блок або фіча — окрема гілка від `develop`: `feat/block-N-name`.
-
-**Будь-які зміни додаються тільки через Pull Request.** Прямий push в `develop` або `main` заборонений.
-
----
-
-## Структура проєкту
-
-### Документація (читати перед розробкою)
-
-| Файл | Що це |
-|---|---|
-| `README.md` | Короткий опис проєкту, стек, команда запуску |
-| `ONBOARDING.md` | Точка входу для нового розробника — читати першим |
-| `CLAUDE.md` | Інструкції для AI-асистента (Claude Code) |
-| `AGENTS.md` | Правило для AI: Next.js 16 — читати доки перед нетривіальними речами |
-| `desc-from-contract.md` | Юридичне ТЗ з контракту (Příloha č. 1) |
-| `docs/PRD.md` | Продуктові вимоги: ролі, acceptance-критерії, що поза скоупом |
-| `docs/TECH-SPEC.md` | Архітектура: стек, Prisma-схема, API, auth, ENV, конвенції |
-| `docs/DESIGN-SYSTEM.md` | Дизайн-система — заморожена, не змінювати |
-| `docs/IMPLEMENTATION-PLAN.md` | План розробки по блоках (0–13), що є / що доробити |
+- `develop` — основна гілка розробки. Прямий push заборонений.
+- Кожен блок плану — окрема гілка від `develop`: `feat/block-N-name` або `chore/...`/`fix/...`.
+- **Будь-які зміни — тільки через Pull Request.** PR описувати: що зроблено, які acceptance-критерії PRD закриті, як перевірити.
+- Перед PR локально: `lint + typecheck + build + test`. CI повинен бути зеленим.
 
 ---
 
-### Код застосунку
+## Команди
 
-#### `app/` — Next.js App Router (сторінки)
+```bash
+npm run dev      # dev-сервер (Turbopack), http://localhost:3000
+npm run build    # production build
+npm run start    # запуск production build
+```
 
-| Шлях | Що це |
-|---|---|
-| `app/layout.tsx` | Кореневий layout: шрифти, глобальні стилі |
-| `app/globals.css` | Дизайн-токени Tailwind v4 (кольори, шрифти, анімації) — не чіпати |
-| `app/(internal)/` | Захищена зона (admin/manager): дашборд, список КП, каталог |
-| `app/(internal)/page.tsx` | Дашборд — головна сторінка після логіну |
-| `app/(internal)/nabidky/page.tsx` | Список всіх комерційних пропозицій |
-| `app/(internal)/nabidky/[id]/page.tsx` | Конструктор КП — редагування конкретної пропозиції |
-| `app/(internal)/katalog/page.tsx` | Каталог продуктів з пошуком і фільтрами |
-| `app/(internal)/layout.tsx` | Layout внутрішньої зони: сайдбар + провайдери |
-| `app/share/[id]/` | Публічна сторінка архітектора (без авторизації, read-only) — буде перейменована в `nabidka/[id]` в продакшені |
+TypeScript-перевірка (немає окремого скрипту поки — Блок 0):
+```bash
+npx tsc --noEmit
+```
 
-#### `components/` — React-компоненти (UI узгоджений клієнтом, не змінювати зовнішній вигляд)
-
-| Файл | Що це |
-|---|---|
-| `Sidebar.tsx` | Бічна навігація внутрішньої зони |
-| `ProductCatalogPanel.tsx` | Панель каталогу продуктів (пошук, фільтр, картки) |
-| `ProductCard.tsx` | Картка одного продукту в каталозі |
-| `ProductIconBox.tsx` | Заглушка-іконка продукту якщо немає фото |
-| `SummaryBlock.tsx` | Блок підсумків КП (знижка, ПДВ, сума) |
-| `MetricCard.tsx` | Картка метрики на дашборді |
-| `PhotoUploader.tsx` | Завантаження фото продукту з даунскейлом |
-| `ShareModal.tsx` | Модалка для копіювання публічного посилання на КП |
-| `ImportModal.tsx` | Модалка імпорту продуктів з Excel (зараз заглушка) |
-| `StatusBadge.tsx` | Бейдж статусу КП (rozpracována / odeslaná / ...) |
-| `Toast.tsx` | Системні повідомлення (toast-нотифікації) |
-
-#### `lib/` — Бізнес-логіка
-
-| Файл | Що це |
-|---|---|
-| `types.ts` | TypeScript-типи: `Product`, `Offer`, `OfferItem`, `Comment` тощо |
-| `calculations.ts` | Вся грошова математика: знижки, ПДВ, підсумки — тільки тут |
-| `store.tsx` | **Тимчасово:** in-memory стан (React context). Буде видалений після підключення БД (Блок 3) |
-| `pdf-export.ts` | Генерація PDF у стилі Farline через jsPDF |
-| `excel-export.ts` | Генерація Excel через ExcelJS |
-| `productIcons.ts` | Маппінг категорії продукту → іконка-заглушка |
-
-#### `data/` — Тестові дані (тимчасово)
-
-| Файл | Що це |
-|---|---|
-| `products.json` | Список продуктів для прототипу |
-| `offers.json` | Список КП для прототипу |
-| `comments.json` | Коментарі архітекторів для прототипу |
-
-> Ці файли будуть перенесені в Prisma seed і видалені в Блоці 1.
-
-#### `scripts/` — Утиліти для тестування
-
-| Файл | Що це |
-|---|---|
-| `test-pdf.mjs` | Перевірка генерації PDF |
-| `test-excel.mjs` | Перевірка генерації Excel |
-
-#### `public/` — Статичні файли
-
-| Шлях | Що це |
-|---|---|
-| `public/sample-photos/` | Тестові фото продуктів (ванни, змішувачі тощо) |
-| `public/fonts/` | Шрифти Roboto для PDF-генерації |
+Тестування PDF/Excel вручну:
+```bash
+node scripts/test-pdf.mjs
+node scripts/test-excel.mjs
+```
 
 ---
 
-### Конфігурація
+## Що переиспользувати (не переписувати)
 
-| Файл | Що це |
-|---|---|
-| `package.json` | Залежності та npm-скрипти |
-| `tsconfig.json` | Налаштування TypeScript |
-| `next.config.ts` | Налаштування Next.js |
-| `postcss.config.mjs` | PostCSS для Tailwind v4 |
-| `.gitignore` | Виключення з git (node_modules, .env, .next) |
+| Файл(и) | Що це | Коли використовуєш |
+|---|---|---|
+| `app/(internal)/**`, `components/**` | Увесь UI (дашборд, список КП, каталог, конструктор, share-сторінка, модалки) | Блоки 3–8 — підключати до БД |
+| `lib/calculations.ts` | Вся грошова математика | Блок 6 — додати НДС, не переписувати |
+| `lib/pdf-export.ts` | PDF у стилі Farline | Блок 9 — додати showVat/hideCode |
+| `lib/excel-export.ts` | Excel через ExcelJS | Блок 9 |
+| `components/ProductIconBox.tsx`, `lib/productIcons.ts` | Заглушка фото | Блок 4 |
+| `components/PhotoUploader.tsx` | UI завантаження фото | Блок 4 — перевести на серверний upload, вигляд не чіпати |
+| `app/globals.css` | Дизайн-токени та анімації | Скрізь |
 
 ---
 
-## З чого починати розробку
+## Що видалити/мігрувати з демо (по блоках)
 
-1. Прочитай `ONBOARDING.md`
-2. Прочитай `docs/PRD.md` — зрозумій що будуємо
-3. Прочитай `docs/TECH-SPEC.md` — зрозумій стек і архітектуру
-4. Відкрий `docs/IMPLEMENTATION-PLAN.md` — знайди поточний блок
-5. Створи гілку від `develop`: `git checkout -b feat/block-N-name`
-6. Після завершення — PR в `develop`
+| Що | Де | Коли (блок) |
+|---|---|---|
+| `lib/store.tsx` (in-memory) | замінити на Prisma + локальний state конструктора | Блок 3 |
+| `data/*.json` | перенести в Prisma seed | Блок 1 |
+| `app/share/[id]/` | видалити цілком, замінити на `app/nabidka/[id]/` | Блок 3 |
+| Заглушка імпорту в `ImportModal.tsx` | наповнити реальним парсингом | Блок 10 |
+| Хардкод «Filip Kott» в Sidebar | брати з сесії | Блок 2 |
+| `StoreProvider` на share-сторінці | прибрати разом зі `share/[id]` | Блок 3 |
+
+---
+
+## Архітектурні межі (не порушувати)
+
+**Internal vs Public:** маршрути під `app/(internal)/` — тільки для Filip (admin/manager). Маршрут `/nabidka/[shareId]` — публічний, без сайдбару, без auth. **`internalNote` та внутрішні поля ніколи не потрапляють у `/api/public/*`.**
+
+**Мутації — тільки Route Handlers** (`app/api/**`). Server Actions не використовуємо. Prisma — тільки серверний код, ніколи в `"use client"` файлах.
+
+**Гроші — `Decimal` (Prisma), не `Float`.** Конвертація `.toNumber()` — тільки на межі API/серверного компонента, не всередині розрахункових циклів. Вся математика — `lib/calculations.ts`.
+
+**`shareId` ≠ `id`** на Offer. Публічна сторінка шукає по `shareId`, внутрішній `id` в публічні URL/відповіді не потрапляє.
+
+**`unitPriceSnapshot`** — ціна фіксується при додаванні позиції до КП; розрахунки беруть знімок, не поточну ціну продукту.
+
+---
+
+## Ключові точки TECH-SPEC, які легко пропустити
+
+- **Next.js 16:** `middleware.ts` → **`proxy.ts`** (codemod: `npx @next/codemod@latest middleware-to-proxy .`). Перед нетривіальними речами читати `node_modules/next/dist/docs/`.
+- **Satoshi** зараз вантажиться зовнішнім `<link>`. У Блоці 0 перенести на `next/font/local`.
+- **`output: "standalone"`** в `next.config.ts` — потрібно для Docker (Блок 12), додати в Блоці 0.
+- **Авторизація в кожному хендлері**, не тільки в proxy. `proxy.ts` перевіряє лише аутентифікацію. Ролі — хелпер `requireAdmin()` першим рядком хендлера.
+- **Throttle логіну:** ≤5–10 невдач / 15 хв → `429`. Відповідь завжди загальна (без розкриття чи існує user).
+- **Rate-limit публічного POST коментарів:** ≤5/10 хв на IP, ≤20/день на КП.
+- **Єдиний формат помилки:** `{ "error": { "code", "message", "fields"? } }`. Валідація — Zod, схеми в `lib/validation/`.
+- **Імпорт — два кроки:** `/preview` (парс в пам'яті, без запису) → `/commit` (запис у БД).
+
+---
+
+## Структура блоків (поточний прогрес)
+
+```
+0 → 1 → 2 → 3 ─┬─ 4 → 5
+               ├─ 6 → 9
+               ├─ 7 → 8
+               └─ 11
+1 → 4 → 10 → 13
+всё → 12
+```
+
+| Блок | Ветка | Суть |
+|---|---|---|
+| 0 | `chore/project-baseline` | CI, ESLint, тести, standalone, Satoshi local |
+| 1 | `feat/db-prisma-setup` | Prisma схема + міграція + seed |
+| 2 | `feat/auth-jwt` | Логін, JWT, proxy.ts, ролі |
+| 3 | `feat/replace-store-with-db` | Замінити store на БД, rename share→nabidka |
+| 4 | `feat/catalog-product-crud` | CRUD продуктів + файли |
+| 5 | `feat/category-fields-and-product-detail` | Поля категорій (admin) + детальна картка |
+| 6 | `feat/offer-builder-statuses-vat` | Статуси позицій, НДС, EUR |
+| 7 | `feat/share-public-offer` | Шаринг + публічна сторінка з БД |
+| 8 | `feat/comments-resend-notifications` | Коментарі + Resend |
+| 9 | `feat/export-vat-hidecode` | PDF/Excel з НДС та hideCode |
+| 10 | `feat/product-import` | Реальний імпорт CSV/XLSX |
+| 11 | `feat/user-management` | Управління користувачами (admin) |
+| 12 | `chore/deploy-hetzner` | Docker + Caddy + Hetzner |
+| 13 | `chore/catalog-seed-suppliers` | Наповнення каталогу (блокується клієнтом) |
+
+Детальний чек-лист кожного блоку — `docs/IMPLEMENTATION-PLAN.md`.

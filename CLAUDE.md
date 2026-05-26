@@ -2,75 +2,119 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Commands
+## Перше: прочитати ланцюг документів
+
+Перед будь-яким кодом — прочитати по порядку:
+
+1. `DEVELOPING.md` — навігатор: поточний стан, що є, що видалити, архітектурні межі
+2. `docs/PRD.md` — що будуємо: ролі, acceptance-критерії, §3 матриця «є→доробити», §9 заборони
+3. `docs/TECH-SPEC.md` — стек, Prisma-схема §3, API §5, auth §4, критичні зауваження §12
+4. `docs/DESIGN-SYSTEM.md` — заморожений візуал, токени, компоненти, чек-лист §9
+5. `docs/IMPLEMENTATION-PLAN.md` — поточний блок і залежності
+
+---
+
+## Команди
 
 ```bash
-npm run dev      # Next.js dev server (Turbopack)
-npm run build    # Production build
-npm run start    # Serve production build
+npm run dev      # dev-сервер (Turbopack)
+npm run build    # production build
+npm run start    # запуск production build
+npx tsc --noEmit # typecheck
+node scripts/test-pdf.mjs    # ручне тестування PDF
+node scripts/test-excel.mjs  # ручне тестування Excel
 ```
 
-No test runner is configured. Manual PDF/Excel testing: `node scripts/test-pdf.mjs` / `node scripts/test-excel.mjs`.
+---
 
-## Project: Farline Nabídky
+## Проєкт: Farline Nabídky
 
-A web platform replacing Filip Kott's (Farline Living) manual Google Sheets workflow for premium sanitary-tech quotes for architects. Core flow: **product catalog → build offer → share public link → architect comments → export PDF/Excel**.
+Платформа замінює ручну роботу Filip Kott (Farline Living) з Google Sheets для створення КП архітекторам. Потік: **каталог продуктів → конструктор КП → публічне посилання → коментарі архітектора → експорт PDF/Excel**.
 
-- Pilot scope: 25 000 CZK, 2 weeks, **no Money S3 integration** (Phase 2).
-- Demo deadline: 2026-05-15. Architecture is intentionally static/JSON-backed — no database, no auth.
+**Поточний стан:** рабочий клієнтський прототип, UI узгоджений і заморожений. Дані in-memory (скидаються при перезавантаженні). Задача: підключити до Postgres/Prisma + додати відсутнє, **не переписуючи UI**.
 
-## Architecture
+---
 
-**Route split:**
+## Архітектура
 
-| Route group | Who sees it | Has sidebar |
+### Межа internal / public (жорстка)
+
+| Маршрут | Хто | Layout |
 |---|---|---|
-| `app/(internal)/` | Filip only | Yes (`Sidebar` + `StoreProvider`) |
-| `app/share/[id]/` | Public / architects | No sidebar, no auth, read-only + comment form |
+| `app/(internal)/` | Filip: admin/manager | Sidebar + StoreProvider (буде замінено на DB) |
+| `app/nabidka/[id]/` | Архітектор, публічно | Без sidebar, без auth, read-only + форма коментаря |
 
-Never let internal actions, sidebar, or Filip-only data leak into `/share/[id]`. That boundary is strict.
+`internalNote` та будь-які внутрішні поля **ніколи** не потрапляють у `/api/public/*`. Є окремі Prisma-select: `offerPublicSelect` і `offerPrivateSelect`.
 
-**State management** — `lib/store.tsx` is a React Context (`StoreProvider`) that boots from static JSON in `data/`. All mutations are in-memory only (no persistence between page reloads). Internal and share routes each wrap their own `StoreProvider` independently.
+### Шари
 
-**Data files** (source of truth for demo): `data/products.json`, `data/offers.json`, `data/comments.json`.
+- **Читання:** серверні компоненти → Prisma напряму
+- **Мутації:** тільки Route Handlers (`app/api/**`). Server Actions не використовуємо
+- **Prisma — тільки сервер.** Ніколи не імпортувати в `"use client"` файли
+- **Клієнтський стан конструктора КП:** локальний `useState` + autosave debounce 1000 мс → PATCH; індикатор `Ukládání… / Uloženo` в шапці
 
-**Key lib files:**
-- `lib/types.ts` — all shared types (`Product`, `Offer`, `OfferItem`, `Comment`, `OfferSummary`) and Czech label maps
-- `lib/calculations.ts` — all money math (`itemTotalBeforeDiscount`, `itemTotalAfterDiscount`, `offerSummary`, `formatCurrency`). Keep all arithmetic here; never compute prices inline in components
-- `lib/store.tsx` — `StoreProvider`, `useStore()`, `createEmptyOffer()`, `uid(prefix)`
-- `lib/pdf-export.ts` — jsPDF-based export (uses Roboto fonts from `public/fonts/`)
-- `lib/excel-export.ts` — ExcelJS-based export
+### Критичні деталі реалізації
 
-**Fonts:** Satoshi (display/headings, loaded from fontshare CDN via `<head>`), Geist Sans (body), Geist Mono (numbers/codes). CSS var: `--font-display`. Always use `font-mono tabular-nums` for any rendered money or numeric value.
+- **`shareId` ≠ `id`** на Offer. Публічний маршрут шукає по `shareId` (random UUID v4)
+- **Гроші — `Decimal` (Prisma), не `Float`.** `.toNumber()` тільки на межі API, не в циклах розрахунку. Вся математика — `lib/calculations.ts`
+- **`unitPriceSnapshot`** — ціна фіксується при додаванні позиції, розрахунки беруть знімок
+- **Next.js 16:** `middleware.ts` → `proxy.ts` (codemod: `npx @next/codemod@latest middleware-to-proxy .`)
+- **Авторизація ролей — в кожному хендлері**, не тільки в proxy. Хелпер `requireAdmin()` першим рядком
+- **Єдиний формат помилки:** `{ "error": { "code", "message", "fields"? } }`. Валідація — Zod в `lib/validation/`
+- **Імпорт продуктів — два кроки:** `/preview` (парс без запису) → `/commit` (запис у БД)
 
-## Design System — Non-Negotiable
+---
 
-- **Accent:** `#8B7355` (aged brass), exposed as `var(--accent)` in CSS
-- **Background:** `#FAFAF8`, surfaces white, text `zinc-900`/`zinc-500`, borders `slate-200/50`
-- **Banned:** purple, neon, gradient text, pure `#000000`, Inter font, Framer Motion, emoji in UI
-- **Status colors:** `rozpracovana`=zinc-400, `odeslana`=sky-600, `okomentovana`=amber-500, `potvrzena`=emerald-600
-- Icons: `@phosphor-icons/react`, always `strokeWidth: 1.5` (or `weight="duotone"` for fills)
-- Product photos: `aspect-4/3 rounded-2xl object-cover`; hover lifts `-translate-y-[2px]` with shadow
-- CTAs: `active:scale-[0.98] active:-translate-y-[1px]` (CSS only, no Framer Motion)
+## Стек (зафіксований, не замінювати)
 
-When in doubt about any visual decision, re-read `docs/DESIGN-SYSTEM.md` before improvising.
-
-## Stack
-
-| Layer | Choice |
+| Шар | Технологія |
 |---|---|
-| Framework | Next.js 16 App Router |
-| Styling | Tailwind CSS v4 |
-| State | React Context (`lib/store.tsx`) — no global store library |
-| Data (demo) | Static JSON in `data/` |
-| PDF | jsPDF + jspdf-autotable |
-| Excel | ExcelJS + SheetJS (xlsx) |
-| Icons | @phosphor-icons/react |
+| Framework | Next.js 16 App Router + React 19 + TypeScript |
+| Стилі | Tailwind CSS v4, токени в `app/globals.css` |
+| БД | PostgreSQL self-hosted (НЕ Supabase) |
+| ORM | Prisma |
+| Auth | Custom JWT (httpOnly cookie) + proxy.ts (НЕ NextAuth) |
+| Файли | Локальний том `/data/uploads` (НЕ S3/MinIO) |
+| Email | Resend |
+| PDF | jsPDF + jspdf-autotable (`lib/pdf-export.ts`) |
+| Excel | ExcelJS (`lib/excel-export.ts`) |
+| Іконки | @phosphor-icons/react, `weight="duotone"` для акцентних |
+| Шрифти | Satoshi (`var(--font-display)`), Geist (body), Geist Mono (числа) |
+| Деплой | Hetzner + Docker Compose + Caddy |
 
-## Language Note
+---
 
-PRD and all UI copy are in **Czech**. Preserve Czech in user-facing strings. Code identifiers, comments, and commit messages in English.
+## Дизайн-система (заморожена — не змінювати зовнішній вигляд)
 
-## Out of Scope (Do Not Build)
+- **Акцент:** aged brass `#8B7355` → `var(--accent)`. Жодного другого акцентного кольору
+- **Фон:** `#FAFAF8`, поверхні білі, текст `zinc-900`/`zinc-500`, межі `zinc-200/70`
+- **Заборонено:** фіолетовий, неон, градієнтний текст, чистий `#000000`, шрифт Inter, Framer Motion, emoji в UI
+- **Статуси КП:** `rozpracovana`=zinc-400, `odeslana`=sky-600, `okomentovana`=amber-500, `potvrzena`=emerald-600
+- Будь-яке відрендерене число — **Geist Mono + `tabular-nums`**
+- CTA — клас `btn-tactile`, фон `var(--accent)`, `active:scale-[0.98] active:-translate-y-[1px]`
+- Перед будь-яким кроком UI — перечитати `docs/DESIGN-SYSTEM.md §9` (чек-лист)
 
-Money S3 integration, architect login/portal, AI assistant, newsletter generator, AR wallpaper viz, project portal. Flag any drift into these before implementing.
+---
+
+## Ключові файли бібліотеки
+
+| Файл | Роль |
+|---|---|
+| `lib/types.ts` | Всі типи + Czech label maps (`PRODUCT_TYPE_LABEL`, `OFFER_STATUS_LABEL`) |
+| `lib/calculations.ts` | Вся грошова математика. Додати VAT тут (Блок 6) |
+| `lib/store.tsx` | Тимчасовий in-memory store. **Видалити у Блоці 3** |
+| `lib/pdf-export.ts` | Генерація PDF (Roboto з `public/fonts/`) |
+| `lib/excel-export.ts` | Генерація Excel |
+| `lib/productIcons.ts` | Маппінг категорія → іконка-заглушка |
+
+---
+
+## Мова
+
+UI-рядки — **чеська** (зберігати існуючі). Ідентифікатори, коментарі, коміти — **англійська**.
+
+---
+
+## Поза скоупом (не реалізовувати)
+
+Money S3 інтеграція, логін-портал архітектора, AI-асистент, newsletter, AR-візуалізація, проєктний портал. При дрейфі туди — зупинитись і запитати.
