@@ -134,7 +134,9 @@ export function NabidkaPublic({
                       <div className="flex items-center gap-3">
                         <ProductIconBox type={p.type} size="xs" imageUrl={p.imageUrl} />
                         <div className="min-w-0">
-                          <div className="font-mono text-[10px] text-zinc-500">{p.code}</div>
+                          {p.code && (
+                            <div className="font-mono text-[10px] text-zinc-500">{p.code}</div>
+                          )}
                           <div className="text-sm font-medium text-zinc-900">{p.name}</div>
                           <div className="text-[11px] text-zinc-500">{p.brand} · {p.decor}</div>
                           {item.note && (

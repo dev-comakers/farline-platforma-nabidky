@@ -146,6 +146,17 @@ export function OfferEditor({
     await fetch(`/api/offers/${offer.id}/items/${itemId}`, { method: "DELETE" });
   };
 
+  const handleShare = async () => {
+    const res = await fetch(`/api/offers/${offer.id}/share`, { method: "POST" });
+    if (res.ok) {
+      const { status: newStatus, alreadyShared } = await res.json() as { status: string; alreadyShared: boolean };
+      if (!alreadyShared && newStatus === "odeslana") {
+        setOffer((prev) => ({ ...prev, status: "odeslana" }));
+      }
+    }
+    setShowShare(true);
+  };
+
   const handleMarkRead = async () => {
     await fetch(`/api/offers/${offer.id}/comments/read`, { method: "PATCH" });
     setComments((prev) => prev.map((c) => ({ ...c, isNew: false })));
@@ -432,7 +443,7 @@ export function OfferEditor({
           <ActionButton
             icon={ShareNetwork}
             label="Sdílet odkaz"
-            onClick={() => setShowShare(true)}
+            onClick={handleShare}
             primary
           />
           {offer.status === "rozpracovana" && (
