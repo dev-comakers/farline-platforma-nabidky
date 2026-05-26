@@ -44,6 +44,14 @@ export function formatCurrency(n: number, currency: Currency): string {
       maximumFractionDigits: 2,
     }).format(n);
   }
+  if (currency === "EUR") {
+    return new Intl.NumberFormat("cs-CZ", {
+      style: "currency",
+      currency: "EUR",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(n);
+  }
   return new Intl.NumberFormat("cs-CZ", {
     style: "currency",
     currency: "CZK",

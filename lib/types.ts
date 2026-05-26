@@ -12,7 +12,7 @@ export type ProductType =
   | "sprchove_kanaly"
   | "ostatni";
 
-export type Currency = "CZK" | "USD";
+export type Currency = "CZK" | "USD" | "EUR";
 
 export type OfferStatus =
   | "rozpracovana"

@@ -149,4 +149,10 @@ describe("formatCurrency", () => {
     expect(result).toContain("0");
     expect(result).toContain("Kč");
   });
+
+  it("formats EUR in cs-CZ locale", () => {
+    const result = formatCurrency(1234.56, "EUR");
+    expect(result).toContain("€");
+    expect(result).toContain("1");
+  });
 });
