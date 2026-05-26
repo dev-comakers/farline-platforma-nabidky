@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   FilePdf,
   MicrosoftExcelLogo,
@@ -8,7 +8,6 @@ import {
   ChatCircleDots,
   PaperPlaneTilt,
 } from "@phosphor-icons/react/dist/ssr";
-import { useStore } from "@/lib/store";
 import {
   offerSummary,
   itemTotalAfterDiscount,
@@ -17,72 +16,58 @@ import {
   formatDateTime,
   formatDate,
 } from "@/lib/calculations";
+import type { Comment, Offer, Product } from "@/lib/types";
 import { ProductIconBox } from "@/components/ProductIconBox";
 import { SummaryBlock } from "@/components/SummaryBlock";
 import { useToast } from "@/components/Toast";
 import { exportOfferToPdf } from "@/lib/pdf-export";
 import { exportOfferToExcel } from "@/lib/excel-export";
-import { uid } from "@/lib/store";
 
-export default function SharePage({
-  params,
+export function NabidkaPublic({
+  offer,
+  snapshotProducts,
+  initialComments,
 }: {
-  params: Promise<{ id: string }>;
+  offer: Omit<Offer, "internalNote">;
+  snapshotProducts: Product[];
+  initialComments: Comment[];
 }) {
-  const { id } = use(params);
-  const { offers, products, comments, addComment } = useStore();
   const { push } = useToast();
+  const [comments, setComments] = useState<Comment[]>(initialComments);
 
-  const offer = offers.find((o) => o.id === id);
   const productsById = useMemo(
-    () => new Map(products.map((p) => [p.id, p])),
-    [products]
+    () => new Map(snapshotProducts.map((p) => [p.id, p])),
+    [snapshotProducts]
   );
-  const summary = useMemo(
-    () => (offer ? offerSummary(offer, products) : null),
-    [offer, products]
-  );
-  const offerComments = comments.filter((c) => c.offerId === id);
+  const summary = useMemo(() => offerSummary(offer, snapshotProducts), [offer, snapshotProducts]);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [text, setText] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  if (!offer) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-6 text-center">
-        <div>
-          <h1
-            className="text-2xl font-semibold text-zinc-900 mb-2"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Nabídka nenalezena
-          </h1>
-          <p className="text-zinc-500 text-sm">
-            Tento odkaz je neplatný nebo již vypršel.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !text.trim()) return;
-    addComment({
-      id: uid("c"),
-      offerId: offer.id,
-      authorName: name.trim(),
-      authorEmail: email.trim(),
-      text: text.trim(),
-      isNew: true,
-      createdAt: new Date().toISOString(),
-    });
-    setSubmitted(true);
-    push("Notifikace odeslána Filipovi");
-    setText("");
-    setTimeout(() => setSubmitted(false), 2800);
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/public/offers/${offer.shareId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ authorName: name.trim(), authorEmail: email.trim(), text: text.trim() }),
+      });
+      if (res.ok) {
+        const { comment } = await res.json() as { comment: Comment };
+        setComments((prev) => [...prev, comment]);
+        setSubmitted(true);
+        push("Notifikace odeslána Filipovi");
+        setText("");
+        setTimeout(() => setSubmitted(false), 2800);
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -149,26 +134,16 @@ export default function SharePage({
                       <div className="flex items-center gap-3">
                         <ProductIconBox type={p.type} size="xs" imageUrl={p.imageUrl} />
                         <div className="min-w-0">
-                          <div className="font-mono text-[10px] text-zinc-500">
-                            {p.code}
-                          </div>
-                          <div className="text-sm font-medium text-zinc-900">
-                            {p.name}
-                          </div>
-                          <div className="text-[11px] text-zinc-500">
-                            {p.brand} · {p.decor}
-                          </div>
+                          <div className="font-mono text-[10px] text-zinc-500">{p.code}</div>
+                          <div className="text-sm font-medium text-zinc-900">{p.name}</div>
+                          <div className="text-[11px] text-zinc-500">{p.brand} · {p.decor}</div>
                           {item.note && (
-                            <div className="text-[11px] text-amber-700 mt-0.5">
-                              {item.note}
-                            </div>
+                            <div className="text-[11px] text-amber-700 mt-0.5">{item.note}</div>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-2 py-4 text-center font-mono tabular-nums text-sm">
-                      {item.quantity}
-                    </td>
+                    <td className="px-2 py-4 text-center font-mono tabular-nums text-sm">{item.quantity}</td>
                     <td className="px-2 py-4 text-right font-mono tabular-nums text-zinc-700 text-xs">
                       {formatCurrency(p.unitPrice, p.currency)}
                     </td>
@@ -192,7 +167,7 @@ export default function SharePage({
           </table>
         </section>
 
-        {summary && <SummaryBlock summary={summary} />}
+        <SummaryBlock summary={summary} />
 
         <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
           <p className="text-xs text-zinc-500">
@@ -200,19 +175,13 @@ export default function SharePage({
           </p>
           <div className="flex gap-2">
             <button
-              onClick={async () => {
-                await exportOfferToPdf(offer, products);
-                push("PDF staženo");
-              }}
+              onClick={async () => { await exportOfferToPdf(offer, snapshotProducts); push("PDF staženo"); }}
               className="btn-tactile inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
             >
               <FilePdf size={16} weight="duotone" color="var(--accent)" /> Stáhnout PDF
             </button>
             <button
-              onClick={async () => {
-                await exportOfferToExcel(offer, products);
-                push("Excel staženo");
-              }}
+              onClick={async () => { await exportOfferToExcel(offer, snapshotProducts); push("Excel staženo"); }}
               className="btn-tactile inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
             >
               <MicrosoftExcelLogo size={16} weight="duotone" color="var(--accent)" /> Stáhnout Excel
@@ -229,13 +198,10 @@ export default function SharePage({
             Komentáře
           </h2>
 
-          {offerComments.length > 0 && (
+          {comments.length > 0 && (
             <ul className="space-y-3 mb-6">
-              {offerComments.map((c) => (
-                <li
-                  key={c.id}
-                  className="bg-white border border-zinc-200/70 rounded-xl px-5 py-4"
-                >
+              {comments.map((c) => (
+                <li key={c.id} className="bg-white border border-zinc-200/70 rounded-xl px-5 py-4">
                   <div className="flex items-start gap-3">
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-semibold shrink-0"
@@ -244,15 +210,9 @@ export default function SharePage({
                       {c.authorName.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-zinc-900">
-                        {c.authorName}
-                      </div>
-                      <p className="mt-1 text-sm text-zinc-700 whitespace-pre-line">
-                        {c.text}
-                      </p>
-                      <div className="mt-1 text-[11px] text-zinc-400">
-                        {formatDateTime(c.createdAt)}
-                      </div>
+                      <div className="text-sm font-medium text-zinc-900">{c.authorName}</div>
+                      <p className="mt-1 text-sm text-zinc-700 whitespace-pre-line">{c.text}</p>
+                      <div className="mt-1 text-[11px] text-zinc-400">{formatDateTime(c.createdAt)}</div>
                     </div>
                   </div>
                 </li>
@@ -260,13 +220,8 @@ export default function SharePage({
             </ul>
           )}
 
-          <form
-            onSubmit={handleSubmit}
-            className="bg-white border border-zinc-200/70 rounded-2xl p-6"
-          >
-            <h3 className="text-sm font-medium text-zinc-900 mb-3">
-              Přidat komentář
-            </h3>
+          <form onSubmit={handleSubmit} className="bg-white border border-zinc-200/70 rounded-2xl p-6">
+            <h3 className="text-sm font-medium text-zinc-900 mb-3">Přidat komentář</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
               <input
                 type="text"
@@ -301,7 +256,7 @@ export default function SharePage({
               )}
               <button
                 type="submit"
-                disabled={!name || !email || !text}
+                disabled={!name || !email || !text || submitting}
                 className="btn-tactile inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-white disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                 style={{ background: "var(--accent)" }}
               >

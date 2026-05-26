@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import { Camera, X, ImageSquare } from "@phosphor-icons/react/dist/ssr";
 import { ProductIconBox } from "./ProductIconBox";
-import { useStore } from "@/lib/store";
 import { useToast } from "./Toast";
 import type { Product } from "@/lib/types";
 
@@ -16,11 +15,7 @@ async function readAsDataUrl(file: File): Promise<string> {
   });
 }
 
-async function downscaleImage(
-  dataUrl: string,
-  maxDim = 800,
-  quality = 0.82
-): Promise<string> {
+async function downscaleImage(dataUrl: string, maxDim = 800, quality = 0.82): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -46,12 +41,13 @@ export function PhotoUploader({
   product,
   size = "md",
   showLabel = false,
+  onUpdate,
 }: {
   product: Product;
   size?: "sm" | "md";
   showLabel?: boolean;
+  onUpdate?: (imageUrl: string | null) => void;
 }) {
-  const { updateProduct } = useStore();
   const { push } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -65,8 +61,15 @@ export function PhotoUploader({
     try {
       const dataUrl = await readAsDataUrl(file);
       const compact = await downscaleImage(dataUrl);
-      updateProduct(product.id, { imageUrl: compact });
-      push("Fotografie nahrána");
+      const res = await fetch(`/api/products/${product.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imagePath: compact }),
+      });
+      if (res.ok) {
+        onUpdate?.(compact);
+        push("Fotografie nahrána");
+      }
     } catch {
       push("Nahrání selhalo", "info");
     } finally {
@@ -74,18 +77,19 @@ export function PhotoUploader({
     }
   };
 
-  const handleRemove = (e: React.MouseEvent) => {
+  const handleRemove = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    updateProduct(product.id, { imageUrl: null });
+    const res = await fetch(`/api/products/${product.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imagePath: null }),
+    });
+    if (res.ok) onUpdate?.(null);
   };
 
   return (
     <div className="relative group inline-block">
-      <ProductIconBox
-        type={product.type}
-        size={size}
-        imageUrl={product.imageUrl}
-      />
+      <ProductIconBox type={product.type} size={size} imageUrl={product.imageUrl} />
       <button
         type="button"
         onClick={(e) => {
@@ -137,16 +141,12 @@ export function PhotoUploader({
   );
 }
 
-export function ProductCardPhotoUploader({
-  product,
-}: {
-  product: Product;
-}) {
-  const { updateProduct } = useStore();
+export function ProductCardPhotoUploader({ product }: { product: Product }) {
   const { push } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [localImageUrl, setLocalImageUrl] = useState(product.imageUrl);
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -154,8 +154,15 @@ export function ProductCardPhotoUploader({
     try {
       const dataUrl = await readAsDataUrl(file);
       const compact = await downscaleImage(dataUrl);
-      updateProduct(product.id, { imageUrl: compact });
-      push("Fotografie nahrána");
+      const res = await fetch(`/api/products/${product.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imagePath: compact }),
+      });
+      if (res.ok) {
+        setLocalImageUrl(compact);
+        push("Fotografie nahrána");
+      }
     } finally {
       setBusy(false);
     }
@@ -183,7 +190,7 @@ export function ProductCardPhotoUploader({
         if (f) await handleFile(f);
       }}
     >
-      <ProductIconBox type={product.type} size="lg" imageUrl={product.imageUrl} />
+      <ProductIconBox type={product.type} size="lg" imageUrl={localImageUrl} />
       <div className="absolute inset-0 bg-zinc-900/0 group-hover:bg-zinc-900/30 transition-colors flex items-center justify-center">
         <span
           className={`opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 text-xs font-medium text-white px-3 py-1.5 rounded-full ${
@@ -192,7 +199,7 @@ export function ProductCardPhotoUploader({
           style={{ background: "var(--accent)" }}
         >
           <Camera size={12} weight="bold" />
-          {busy ? "Nahrávám…" : product.imageUrl ? "Změnit" : "Nahrát fotografii"}
+          {busy ? "Nahrávám…" : localImageUrl ? "Změnit" : "Nahrát fotografii"}
         </span>
       </div>
       <input
