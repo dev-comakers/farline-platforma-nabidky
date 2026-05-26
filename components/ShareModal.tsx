@@ -6,20 +6,20 @@ import { X, Copy, Check, ShareNetwork } from "@phosphor-icons/react/dist/ssr";
 export function ShareModal({
   open,
   onClose,
-  offerId,
+  shareId,
 }: {
   open: boolean;
   onClose: () => void;
-  offerId: string;
+  shareId: string;
 }) {
   const [copied, setCopied] = useState(false);
   const [url, setUrl] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setUrl(`${window.location.origin}/share/${offerId}`);
+      setUrl(`${window.location.origin}/nabidka/${shareId}`);
     }
-  }, [offerId]);
+  }, [shareId]);
 
   useEffect(() => {
     if (!copied) return;

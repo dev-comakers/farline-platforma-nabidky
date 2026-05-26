@@ -1,0 +1,200 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import {
+  MagnifyingGlass,
+  UploadSimple,
+  SquaresFour,
+  ListBullets,
+} from "@phosphor-icons/react/dist/ssr";
+import { ProductCard } from "@/components/ProductCard";
+import { ImportModal } from "@/components/ImportModal";
+import { PRODUCT_TYPE_LABEL, type ProductType, type Product } from "@/lib/types";
+import { ProductIconBox } from "@/components/ProductIconBox";
+import { formatCurrency } from "@/lib/calculations";
+
+export function KatalogClient({ initialProducts }: { initialProducts: Product[] }) {
+  const [products] = useState<Product[]>(initialProducts);
+  const [query, setQuery] = useState("");
+  const [brand, setBrand] = useState<string | null>(null);
+  const [type, setType] = useState<ProductType | null>(null);
+  const [view, setView] = useState<"grid" | "list">("grid");
+  const [importOpen, setImportOpen] = useState(false);
+
+  const brands = useMemo(
+    () => Array.from(new Set(products.map((p) => p.brand))).sort(),
+    [products]
+  );
+
+  const types = useMemo(
+    () => Array.from(new Set(products.map((p) => p.type))),
+    [products]
+  );
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return products
+      .filter((p) => (brand ? p.brand === brand : true))
+      .filter((p) => (type ? p.type === type : true))
+      .filter((p) =>
+        q
+          ? p.code.toLowerCase().includes(q) ||
+            p.name.toLowerCase().includes(q) ||
+            p.brand.toLowerCase().includes(q) ||
+            p.decor.toLowerCase().includes(q)
+          : true
+      );
+  }, [products, query, brand, type]);
+
+  return (
+    <div className="px-10 py-8 max-w-[1400px]">
+      <header className="flex items-end justify-between mb-8">
+        <div>
+          <div className="text-xs uppercase tracking-[0.2em] text-zinc-400 mb-2">
+            Katalog
+          </div>
+          <h1
+            className="text-4xl font-semibold tracking-tight text-zinc-900"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Produkty
+            <span className="ml-3 text-base font-normal text-zinc-400 tabular-nums">
+              {products.length}
+            </span>
+          </h1>
+        </div>
+        <button
+          onClick={() => setImportOpen(true)}
+          className="btn-tactile inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white shadow-sm"
+          style={{ background: "var(--accent)" }}
+        >
+          <UploadSimple size={16} weight="bold" /> Importovat CSV
+        </button>
+      </header>
+
+      <div className="flex items-center gap-3 mb-4">
+        <div className="relative flex-1 max-w-md">
+          <MagnifyingGlass
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+          />
+          <input
+            type="text"
+            placeholder="Hledat kód, název, značku, dekor..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-2.5 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400"
+          />
+        </div>
+
+        <select
+          value={type ?? ""}
+          onChange={(e) => setType((e.target.value || null) as ProductType | null)}
+          className="px-3 py-2.5 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400"
+        >
+          <option value="">Všechny typy</option>
+          {types.map((t) => (
+            <option key={t} value={t}>
+              {PRODUCT_TYPE_LABEL[t]}
+            </option>
+          ))}
+        </select>
+
+        <div className="ml-auto flex bg-white border border-zinc-200 rounded-lg p-0.5">
+          <button
+            onClick={() => setView("grid")}
+            className={`p-2 rounded-md ${
+              view === "grid" ? "bg-zinc-100 text-zinc-900" : "text-zinc-400"
+            }`}
+            aria-label="Mřížka"
+          >
+            <SquaresFour size={16} />
+          </button>
+          <button
+            onClick={() => setView("list")}
+            className={`p-2 rounded-md ${
+              view === "list" ? "bg-zinc-100 text-zinc-900" : "text-zinc-400"
+            }`}
+            aria-label="Seznam"
+          >
+            <ListBullets size={16} />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5 mb-6">
+        <FilterChip active={brand === null} onClick={() => setBrand(null)}>
+          Všechny značky
+        </FilterChip>
+        {brands.map((b) => (
+          <FilterChip key={b} active={brand === b} onClick={() => setBrand(b)}>
+            {b}
+          </FilterChip>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="bg-white border border-zinc-200/70 rounded-2xl py-16 text-center text-sm text-zinc-500">
+          Žádné produkty neodpovídají filtrům.
+        </div>
+      ) : view === "grid" ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          {filtered.map((p, i) => (
+            <ProductCard key={p.id} product={p} index={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white border border-zinc-200/70 rounded-2xl overflow-hidden">
+          {filtered.map((p) => (
+            <div
+              key={p.id}
+              className="flex items-center gap-4 px-4 py-3 border-b border-zinc-100 last:border-b-0 hover:bg-zinc-50/60"
+            >
+              <ProductIconBox type={p.type} size="sm" imageUrl={p.imageUrl} />
+              <div className="flex-1 min-w-0">
+                <div className="font-mono text-[10px] text-zinc-500">{p.code}</div>
+                <div className="text-sm font-medium text-zinc-900 truncate">
+                  {p.name}
+                </div>
+                <div className="text-xs text-zinc-500">
+                  {p.brand} · {p.decor}
+                </div>
+              </div>
+              <span className="text-xs text-zinc-500 uppercase tracking-wider">
+                {PRODUCT_TYPE_LABEL[p.type]}
+              </span>
+              <span className="font-mono tabular-nums text-sm font-medium text-zinc-900 min-w-[120px] text-right">
+                {formatCurrency(p.unitPrice, p.currency)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
+    </div>
+  );
+}
+
+function FilterChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+        active
+          ? "border-zinc-900 bg-zinc-900 text-white"
+          : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}

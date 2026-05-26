@@ -81,6 +81,7 @@ describe("offerSummary", () => {
 
   const offer: Offer = {
     id: "o1",
+    shareId: "share-o1",
     name: "Test Offer",
     architect: "Jan Novák",
     status: "rozpracovana",

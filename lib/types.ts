@@ -44,6 +44,7 @@ export interface OfferItem {
 
 export interface Offer {
   id: string;
+  shareId: string;
   name: string;
   architect: string;
   status: OfferStatus;
