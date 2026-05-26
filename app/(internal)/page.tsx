@@ -5,6 +5,7 @@ import {
   PaperPlaneTilt,
   ChatCircleDots,
   ArrowRight,
+  Package,
 } from "@phosphor-icons/react/dist/ssr";
 import { prisma } from "@/lib/db/prisma";
 import { MetricCard } from "@/components/MetricCard";
@@ -88,7 +89,16 @@ export default async function DashboardPage() {
             Přehled
           </h1>
         </div>
-        <CreateOfferButton />
+        <div className="flex items-center gap-3">
+          <Link
+            href="/katalog"
+            className="btn-tactile inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
+          >
+            <Package size={16} weight="duotone" color="var(--accent)" />
+            Otevřít katalog
+          </Link>
+          <CreateOfferButton />
+        </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">

@@ -41,6 +41,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const payload = await getAuthFromRequest(req);
   if (!payload) return unauthorizedResponse();
+  if (payload.role !== "admin") {
+    return Response.json({ error: { code: "FORBIDDEN", message: "Pouze admin může smazat nabídku" } }, { status: 403 });
+  }
 
   const { id } = await params;
   const existing = await prisma.offer.findUnique({ where: { id }, select: { id: true } });
