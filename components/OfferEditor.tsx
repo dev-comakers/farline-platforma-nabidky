@@ -173,7 +173,7 @@ export function OfferEditor({
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-0 min-h-screen">
-      <div className="px-10 py-8 max-w-[1100px]">
+      <div className="px-6 xl:px-10 py-8 min-w-0 overflow-x-hidden">
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => router.push("/nabidky")}
@@ -215,7 +215,7 @@ export function OfferEditor({
           </div>
         </header>
 
-        <section className="bg-white border border-zinc-200/70 rounded-2xl overflow-hidden mb-6">
+        <section className="bg-white border border-zinc-200/70 rounded-2xl overflow-hidden mb-6 overflow-x-auto">
           <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
             <h2
               className="text-base font-semibold text-zinc-900"
