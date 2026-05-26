@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
-import { offerListSelect, mapOffer, productSelect, mapProduct, snapshotProducts, commentSelect, mapComment } from "@/lib/db/selects";
+import { offerListSelect, mapOffer, snapshotProducts, commentSelect, mapComment } from "@/lib/db/selects";
 import { NabidkaPublic } from "@/components/NabidkaPublic";
 
 export default async function NabidkaPublicPage({
@@ -17,14 +17,28 @@ export default async function NabidkaPublicPage({
 
   if (!dbOffer || !dbOffer.shareEnabled) notFound();
 
-  const [dbAllProducts, dbComments] = await Promise.all([
-    prisma.product.findMany({ select: productSelect }),
-    prisma.comment.findMany({ where: { offerId: dbOffer.id }, orderBy: { createdAt: "asc" }, select: commentSelect }),
-  ]);
+  const dbComments = await prisma.comment.findMany({
+    where: { offerId: dbOffer.id },
+    orderBy: { createdAt: "asc" },
+    select: commentSelect,
+  });
 
-  const { internalNote: _stripped, ...publicOffer } = mapOffer(dbOffer);
-  const snapProds = snapshotProducts(dbOffer.items);
-  const comments = dbComments.map(mapComment);
+  const { internalNote: _i, ...publicOffer } = mapOffer(dbOffer);
+  const hideCode = dbOffer.hideCode;
+
+  const snapProds = snapshotProducts(dbOffer.items).map((p) =>
+    hideCode ? { ...p, code: "" } : p
+  );
+
+  const comments = dbComments.map((c) => ({
+    id: c.id,
+    offerId: c.offerId,
+    authorName: c.authorName,
+    authorEmail: "",
+    text: c.text,
+    isNew: c.isNew,
+    createdAt: c.createdAt.toISOString(),
+  }));
 
   return (
     <NabidkaPublic
