@@ -11,26 +11,36 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q")?.trim() ?? "";
   const categoryId = searchParams.get("categoryId") ?? "";
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const limit = Math.min(200, Math.max(1, parseInt(searchParams.get("limit") ?? "48", 10)));
+  const skip = (page - 1) * limit;
 
-  const products = await prisma.product.findMany({
-    where: {
-      ...(q
-        ? {
-            OR: [
-              { code: { contains: q, mode: "insensitive" } },
-              { name: { contains: q, mode: "insensitive" } },
-              { brand: { contains: q, mode: "insensitive" } },
-              { decor: { contains: q, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-      ...(categoryId ? { categoryId } : {}),
-    },
-    select: productSelect,
-    orderBy: [{ brand: "asc" }, { code: "asc" }],
-  });
+  const where = {
+    ...(q
+      ? {
+          OR: [
+            { code: { contains: q, mode: "insensitive" as const } },
+            { name: { contains: q, mode: "insensitive" as const } },
+            { brand: { contains: q, mode: "insensitive" as const } },
+            { decor: { contains: q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+    ...(categoryId ? { categoryId } : {}),
+  };
 
-  return Response.json({ products: products.map(mapProduct) });
+  const [products, total] = await prisma.$transaction([
+    prisma.product.findMany({
+      where,
+      select: productSelect,
+      orderBy: [{ brand: "asc" }, { code: "asc" }],
+      skip,
+      take: limit,
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  return Response.json({ products: products.map(mapProduct), total, page, limit });
 }
 
 export async function POST(req: NextRequest) {
