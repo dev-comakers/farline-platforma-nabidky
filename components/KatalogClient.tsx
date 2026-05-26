@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   MagnifyingGlass,
   UploadSimple,
@@ -20,6 +21,7 @@ import { formatCurrency } from "@/lib/calculations";
 import { useToast } from "@/components/Toast";
 
 export function KatalogClient({ initialProducts }: { initialProducts: Product[] }) {
+  const router = useRouter();
   const { push } = useToast();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
@@ -260,7 +262,7 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
         </div>
       )}
 
-      <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
+      <ImportModal open={importOpen} onClose={() => setImportOpen(false)} onImported={() => router.refresh()} />
       <ProductForm
         open={formOpen}
         onClose={() => setFormOpen(false)}
