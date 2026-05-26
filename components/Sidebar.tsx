@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { House, FileText, Package, Gear } from "@phosphor-icons/react/dist/ssr";
+import { House, FileText, Package, Gear, Users } from "@phosphor-icons/react/dist/ssr";
 import type { PhosphorIcon } from "@/lib/productIcons";
 
 interface NavItem {
@@ -26,7 +26,8 @@ const NAV: NavItem[] = [
 ];
 
 const ADMIN_NAV: NavItem[] = [
-  { href: "/nastaveni/kategorie", label: "Kategorie", icon: Gear, matchPrefix: "/nastaveni" },
+  { href: "/nastaveni/kategorie", label: "Kategorie", icon: Gear, matchPrefix: "/nastaveni/kategorie" },
+  { href: "/nastaveni/uzivatele", label: "Uživatelé", icon: Users, matchPrefix: "/nastaveni/uzivatele" },
 ];
 
 function getInitials(name: string): string {
