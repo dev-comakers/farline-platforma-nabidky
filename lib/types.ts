@@ -1,3 +1,22 @@
+export type FieldType = "text" | "number" | "select";
+
+export interface CategoryField {
+  id: string;
+  key: string;
+  label: string;
+  type: FieldType;
+  options: string[];
+  order: number;
+}
+
+export interface ProductCategory {
+  id: string;
+  key: string;
+  label: string;
+  order: number;
+  fields: CategoryField[];
+}
+
 export type ProductType =
   | "umyvadlove_baterie"
   | "vanove_baterie"
@@ -30,6 +49,8 @@ export interface Product {
   unitPrice: number;
   currency: Currency;
   imageUrl: string | null;
+  technicalSheetUrl: string | null;
+  parameters: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 }

@@ -10,6 +10,8 @@ export const productSelect = {
   unitPrice: true,
   currency: true,
   imagePath: true,
+  technicalSheetPath: true,
+  parameters: true,
   createdAt: true,
   updatedAt: true,
   category: { select: { key: true } },
@@ -74,6 +76,8 @@ export function mapProduct(p: DbProduct): Product {
     unitPrice: p.unitPrice.toNumber(),
     currency: p.currency as Currency,
     imageUrl: p.imagePath ? `/api/uploads/${p.imagePath}` : null,
+    technicalSheetUrl: p.technicalSheetPath ? `/api/uploads/${p.technicalSheetPath}` : null,
+    parameters: (p.parameters ?? {}) as Record<string, string>,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
   };

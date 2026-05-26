@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   MagnifyingGlass,
   UploadSimple,
@@ -13,7 +13,8 @@ import {
 import { ProductCard } from "@/components/ProductCard";
 import { ImportModal } from "@/components/ImportModal";
 import { ProductForm } from "@/components/ProductForm";
-import { PRODUCT_TYPE_LABEL, type ProductType, type Product } from "@/lib/types";
+import { ProductDetailModal } from "@/components/ProductDetailModal";
+import { PRODUCT_TYPE_LABEL, type CategoryField, type ProductCategory, type ProductType, type Product } from "@/lib/types";
 import { ProductIconBox } from "@/components/ProductIconBox";
 import { formatCurrency } from "@/lib/calculations";
 import { useToast } from "@/components/Toast";
@@ -21,6 +22,7 @@ import { useToast } from "@/components/Toast";
 export function KatalogClient({ initialProducts }: { initialProducts: Product[] }) {
   const { push } = useToast();
   const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [query, setQuery] = useState("");
   const [brand, setBrand] = useState<string | null>(null);
   const [type, setType] = useState<ProductType | null>(null);
@@ -28,6 +30,19 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
   const [importOpen, setImportOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | undefined>(undefined);
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((d) => setCategories(d.categories ?? []))
+      .catch(() => {});
+  }, []);
+
+  const getCategoryFields = (product: Product): CategoryField[] => {
+    const cat = categories.find((c) => c.key === product.type);
+    return cat?.fields ?? [];
+  };
 
   const brands = useMemo(
     () => Array.from(new Set(products.map((p) => p.brand))).sort(),
@@ -180,18 +195,18 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
       ) : view === "grid" ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {filtered.map((p, i) => (
-            <div key={p.id} className="relative group/card">
+            <div key={p.id} className="relative group/card cursor-pointer" onClick={() => setDetailProduct(p)}>
               <ProductCard product={p} index={i} />
               <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
                 <button
-                  onClick={() => { setEditProduct(p); setFormOpen(true); }}
+                  onClick={(e) => { e.stopPropagation(); setEditProduct(p); setFormOpen(true); }}
                   className="p-1.5 bg-white rounded-lg border border-zinc-200 shadow-sm text-zinc-600 hover:text-zinc-900"
                   title="Upravit"
                 >
                   <PencilSimple size={12} />
                 </button>
                 <button
-                  onClick={() => handleDelete(p)}
+                  onClick={(e) => { e.stopPropagation(); handleDelete(p); }}
                   className="p-1.5 bg-white rounded-lg border border-zinc-200 shadow-sm text-red-500 hover:text-red-700"
                   title="Smazat"
                 >
@@ -252,6 +267,13 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
         product={editProduct}
         onSaved={handleSaved}
       />
+      {detailProduct && (
+        <ProductDetailModal
+          product={detailProduct}
+          categoryFields={getCategoryFields(detailProduct)}
+          onClose={() => setDetailProduct(null)}
+        />
+      )}
     </div>
   );
 }
