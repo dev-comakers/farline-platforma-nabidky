@@ -31,6 +31,9 @@ const makeItem = (
   productId,
   quantity,
   discountPercent,
+  confirmed: false,
+  ordered: false,
+  received: false,
 });
 
 describe("itemTotalBeforeDiscount", () => {
@@ -91,6 +94,9 @@ describe("offerSummary", () => {
       makeItem("p2", 4, 0),
     ],
     internalNote: null,
+    showVat: false,
+    vatRate: 0.21,
+    hideCode: false,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
   };
@@ -108,6 +114,21 @@ describe("offerSummary", () => {
   it("computes total after discount", () => {
     const summary = offerSummary(offer, [p1, p2]);
     expect(summary.totalAfterDiscount).toBe(3800);
+  });
+
+  it("vatAmount is 0 when showVat=false", () => {
+    const summary = offerSummary(offer, [p1, p2]);
+    expect(summary.vatAmount).toBe(0);
+    expect(summary.totalWithVat).toBe(3800);
+    expect(summary.showVat).toBe(false);
+  });
+
+  it("computes vatAmount when showVat=true", () => {
+    const vatOffer: Offer = { ...offer, showVat: true, vatRate: 0.21 };
+    const summary = offerSummary(vatOffer, [p1, p2]);
+    expect(summary.vatAmount).toBe(798);
+    expect(summary.totalWithVat).toBe(4598);
+    expect(summary.showVat).toBe(true);
   });
 
   it("counts items correctly", () => {

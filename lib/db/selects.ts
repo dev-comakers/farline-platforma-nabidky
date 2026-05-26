@@ -22,6 +22,9 @@ export const offerItemSelect = {
   discountPercent: true,
   unitPriceSnapshot: true,
   note: true,
+  confirmed: true,
+  ordered: true,
+  received: true,
   position: true,
   product: { select: productSelect },
 } satisfies Prisma.OfferItemSelect;
@@ -34,6 +37,9 @@ export const offerListSelect = {
   status: true,
   currency: true,
   internalNote: true,
+  showVat: true,
+  vatRate: true,
+  hideCode: true,
   createdAt: true,
   updatedAt: true,
   items: {
@@ -80,6 +86,9 @@ export function mapOfferItem(item: DbOfferItem): OfferItem {
     quantity: item.quantity,
     discountPercent: item.discountPercent.toNumber(),
     note: item.note ?? undefined,
+    confirmed: item.confirmed,
+    ordered: item.ordered,
+    received: item.received,
   };
 }
 
@@ -107,6 +116,9 @@ export function mapOffer(o: DbOffer): Offer {
     status: o.status as OfferStatus,
     currency: o.currency as Currency,
     internalNote: o.internalNote,
+    showVat: o.showVat,
+    vatRate: o.vatRate.toNumber(),
+    hideCode: o.hideCode,
     items: o.items.map(mapOfferItem),
     createdAt: o.createdAt.toISOString(),
     updatedAt: o.updatedAt.toISOString(),

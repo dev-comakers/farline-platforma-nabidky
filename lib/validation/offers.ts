@@ -11,6 +11,8 @@ export const updateOfferSchema = z.object({
   architect: z.string().max(200).optional(),
   currency: z.enum(["CZK", "USD", "EUR"]).optional(),
   internalNote: z.string().nullable().optional(),
+  showVat: z.boolean().optional(),
+  hideCode: z.boolean().optional(),
 });
 
 export const updateOfferStatusSchema = z.object({
@@ -25,6 +27,9 @@ export const updateItemSchema = z.object({
   quantity: z.number().int().min(1).optional(),
   discountPercent: z.number().min(0).max(100).optional(),
   note: z.string().max(500).nullable().optional(),
+  confirmed: z.boolean().optional(),
+  ordered: z.boolean().optional(),
+  received: z.boolean().optional(),
 });
 
 export const addCommentSchema = z.object({

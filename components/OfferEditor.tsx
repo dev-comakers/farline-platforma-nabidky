@@ -12,6 +12,8 @@ import {
   ChatCircleDots,
   PaperPlaneTilt,
   CheckCircle,
+  Eye,
+  EyeSlash,
 } from "@phosphor-icons/react/dist/ssr";
 import {
   offerSummary,
@@ -32,6 +34,7 @@ import { exportOfferToPdf } from "@/lib/pdf-export";
 import { exportOfferToExcel } from "@/lib/excel-export";
 
 type SaveStatus = "idle" | "saving" | "saved";
+type ItemPatch = Partial<Pick<OfferItem, "quantity" | "discountPercent" | "note" | "confirmed" | "ordered" | "received">>;
 
 export function OfferEditor({
   initialOffer,
@@ -126,7 +129,7 @@ export function OfferEditor({
     }
   };
 
-  const handleUpdateItem = async (itemId: string, patch: Partial<Pick<OfferItem, "quantity" | "discountPercent" | "note">>) => {
+  const handleUpdateItem = async (itemId: string, patch: ItemPatch) => {
     setOffer((prev) => ({
       ...prev,
       items: prev.items.map((i) => i.id === itemId ? { ...i, ...patch } : i),
@@ -231,6 +234,9 @@ export function OfferEditor({
                   <th className="px-2 py-3 font-medium text-right">Jedn. cena</th>
                   <th className="px-2 py-3 font-medium text-center">Sleva</th>
                   <th className="px-4 py-3 font-medium text-right">Po slevě</th>
+                  <th className="px-2 py-3 font-medium text-center" title="Potvrzeno">P</th>
+                  <th className="px-2 py-3 font-medium text-center" title="Objednáno">O</th>
+                  <th className="px-2 py-3 font-medium text-center" title="Získáno">Z</th>
                   <th className="w-8"></th>
                 </tr>
               </thead>
@@ -257,9 +263,11 @@ export function OfferEditor({
                             }}
                           />
                           <div className="min-w-0">
-                            <div className="font-mono text-[10px] text-zinc-500">
-                              {product.code}
-                            </div>
+                            {!offer.hideCode && (
+                              <div className="font-mono text-[10px] text-zinc-500">
+                                {product.code}
+                              </div>
+                            )}
                             <div className="text-sm font-medium text-zinc-900 truncate max-w-[340px]">
                               {product.name}
                             </div>
@@ -298,6 +306,27 @@ export function OfferEditor({
                             {formatCurrency(totalBefore, product.currency)}
                           </div>
                         )}
+                      </td>
+                      <td className="px-2 py-3 text-center">
+                        <StatusCheckbox
+                          checked={item.confirmed}
+                          onChange={(v) => handleUpdateItem(item.id, { confirmed: v })}
+                          title="Potvrzeno"
+                        />
+                      </td>
+                      <td className="px-2 py-3 text-center">
+                        <StatusCheckbox
+                          checked={item.ordered}
+                          onChange={(v) => handleUpdateItem(item.id, { ordered: v })}
+                          title="Objednáno"
+                        />
+                      </td>
+                      <td className="px-2 py-3 text-center">
+                        <StatusCheckbox
+                          checked={item.received}
+                          onChange={(v) => handleUpdateItem(item.id, { received: v })}
+                          title="Získáno"
+                        />
                       </td>
                       <td className="px-2 py-3">
                         <button
@@ -395,7 +424,7 @@ export function OfferEditor({
         </section>
       </div>
 
-      <aside className="xl:sticky xl:top-0 xl:h-screen border-l border-zinc-200/70 bg-white/50 px-6 py-8">
+      <aside className="xl:sticky xl:top-0 xl:h-screen border-l border-zinc-200/70 bg-white/50 px-6 py-8 overflow-y-auto">
         <div className="text-xs uppercase tracking-[0.2em] text-zinc-400 mb-4">
           Akce
         </div>
@@ -437,7 +466,28 @@ export function OfferEditor({
             }}
           />
         </div>
-        <hr className="my-6 border-zinc-200/60" />
+
+        <hr className="my-5 border-zinc-200/60" />
+
+        <div className="text-xs uppercase tracking-[0.2em] text-zinc-400 mb-3">
+          Zobrazení
+        </div>
+        <div className="space-y-2">
+          <ToggleRow
+            icon={offer.showVat ? Eye : EyeSlash}
+            label="Zobrazit DPH"
+            checked={offer.showVat}
+            onChange={(v) => updateField("showVat", v)}
+          />
+          <ToggleRow
+            icon={offer.hideCode ? EyeSlash : Eye}
+            label="Skrýt kód produktu"
+            checked={offer.hideCode}
+            onChange={(v) => updateField("hideCode", v)}
+          />
+        </div>
+
+        <hr className="my-5 border-zinc-200/60" />
         {showDeleteConfirm ? (
           <div className="space-y-2">
             <p className="text-xs text-zinc-600">Opravdu smazat?</p>
@@ -550,6 +600,62 @@ function DiscountInput({ value, onChange }: { value: number; onChange: (n: numbe
       />
       <span className="text-xs text-zinc-400">%</span>
     </div>
+  );
+}
+
+function StatusCheckbox({ checked, onChange, title }: { checked: boolean; onChange: (v: boolean) => void; title: string }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={() => onChange(!checked)}
+      className={`w-5 h-5 rounded border transition-colors flex items-center justify-center ${
+        checked
+          ? "border-emerald-500 bg-emerald-500 text-white"
+          : "border-zinc-300 bg-white text-transparent hover:border-zinc-400"
+      }`}
+      aria-label={title}
+      aria-checked={checked}
+      role="checkbox"
+    >
+      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+        <path d="M1 4L3.5 6.5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+  );
+}
+
+function ToggleRow({
+  icon: Icon,
+  label,
+  checked,
+  onChange,
+}: {
+  icon: React.ComponentType<{ size?: number }>;
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-zinc-700 hover:bg-zinc-100 border border-zinc-200"
+    >
+      <Icon size={15} />
+      <span className="flex-1 text-left">{label}</span>
+      <span
+        className={`w-8 h-4 rounded-full transition-colors relative shrink-0 ${
+          checked ? "bg-emerald-500" : "bg-zinc-300"
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-transform ${
+            checked ? "translate-x-4" : "translate-x-0.5"
+          }`}
+        />
+      </span>
+    </button>
   );
 }
 

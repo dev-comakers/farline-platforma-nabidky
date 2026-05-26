@@ -26,12 +26,17 @@ export function offerSummary(offer: Offer, products: Product[]): OfferSummary {
   }
   totalBeforeDiscount = round2(totalBeforeDiscount);
   totalDiscount = round2(totalDiscount);
+  const totalAfterDiscount = round2(totalBeforeDiscount - totalDiscount);
+  const vatAmount = offer.showVat ? round2(totalAfterDiscount * offer.vatRate) : 0;
   return {
     totalBeforeDiscount,
     totalDiscount,
-    totalAfterDiscount: round2(totalBeforeDiscount - totalDiscount),
+    totalAfterDiscount,
+    vatAmount,
+    totalWithVat: round2(totalAfterDiscount + vatAmount),
     itemCount: offer.items.length,
     currency: offer.currency,
+    showVat: offer.showVat,
   };
 }
 

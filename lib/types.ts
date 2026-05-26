@@ -40,6 +40,9 @@ export interface OfferItem {
   quantity: number;
   discountPercent: number;
   note?: string;
+  confirmed: boolean;
+  ordered: boolean;
+  received: boolean;
 }
 
 export interface Offer {
@@ -51,6 +54,9 @@ export interface Offer {
   currency: Currency;
   items: OfferItem[];
   internalNote?: string | null;
+  showVat: boolean;
+  vatRate: number;
+  hideCode: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -69,8 +75,11 @@ export interface OfferSummary {
   totalBeforeDiscount: number;
   totalDiscount: number;
   totalAfterDiscount: number;
+  vatAmount: number;
+  totalWithVat: number;
   itemCount: number;
   currency: Currency;
+  showVat: boolean;
 }
 
 export const PRODUCT_TYPE_LABEL: Record<ProductType, string> = {

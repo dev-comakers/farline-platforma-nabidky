@@ -30,6 +30,9 @@ export async function PATCH(
       ...(parsed.data.quantity !== undefined && { quantity: parsed.data.quantity }),
       ...(parsed.data.discountPercent !== undefined && { discountPercent: parsed.data.discountPercent }),
       ...(parsed.data.note !== undefined && { note: parsed.data.note }),
+      ...(parsed.data.confirmed !== undefined && { confirmed: parsed.data.confirmed }),
+      ...(parsed.data.ordered !== undefined && { ordered: parsed.data.ordered }),
+      ...(parsed.data.received !== undefined && { received: parsed.data.received }),
     },
     select: offerItemSelect,
   });
