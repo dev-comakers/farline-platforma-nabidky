@@ -1,11 +1,10 @@
 import { PrismaClient, Currency, OfferStatus } from "@prisma/client";
-import { createHash } from "crypto";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-// Simple bcrypt-free hash for seed — replace with argon2 in Block 2
-function hashPassword(password: string): string {
-  return createHash("sha256").update(password).digest("hex");
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12);
 }
 
 const CATEGORIES = [
@@ -113,14 +112,15 @@ async function main() {
   // Admin user (idempotent)
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@farline.cz";
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "changeme";
+  const passwordHash = await hashPassword(adminPassword);
   await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {},
+    update: { passwordHash },
     create: {
       email: adminEmail,
       name: "Filip Kott",
       role: "admin",
-      passwordHash: hashPassword(adminPassword),
+      passwordHash,
     },
   });
   console.log(`Admin upserted: ${adminEmail}`);
