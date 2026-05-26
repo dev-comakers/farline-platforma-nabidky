@@ -223,7 +223,8 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
           {filtered.map((p) => (
             <div
               key={p.id}
-              className="flex items-center gap-4 px-4 py-3 border-b border-zinc-100 last:border-b-0 hover:bg-zinc-50/60 group"
+              onClick={() => setDetailProduct(p)}
+              className="flex items-center gap-4 px-4 py-3 border-b border-zinc-100 last:border-b-0 hover:bg-zinc-50/60 group cursor-pointer"
             >
               <ProductIconBox type={p.type} size="sm" imageUrl={p.imageUrl} />
               <div className="flex-1 min-w-0">
@@ -274,6 +275,7 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
           product={detailProduct}
           categoryFields={getCategoryFields(detailProduct)}
           onClose={() => setDetailProduct(null)}
+          allowUpload
         />
       )}
     </div>

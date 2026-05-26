@@ -5,6 +5,7 @@ import { MagnifyingGlass, X, Plus } from "@phosphor-icons/react/dist/ssr";
 import type { Product, Currency } from "@/lib/types";
 import { formatCurrency } from "@/lib/calculations";
 import { ProductIconBox } from "./ProductIconBox";
+import { ProductDetailModal } from "./ProductDetailModal";
 
 export function ProductCatalogPanel({
   open,
@@ -21,6 +22,7 @@ export function ProductCatalogPanel({
 }) {
   const [query, setQuery] = useState("");
   const [brand, setBrand] = useState<string | null>(null);
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
 
   const brands = useMemo(
     () => Array.from(new Set(products.map((p) => p.brand))).sort(),
@@ -123,7 +125,7 @@ export function ProductCatalogPanel({
           {filtered.map((p) => (
             <button
               key={p.id}
-              onClick={() => onAdd(p.id)}
+              onClick={() => setDetailProduct(p)}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-50 text-left group transition-colors"
             >
               <ProductIconBox type={p.type} size="sm" imageUrl={p.imageUrl} />
@@ -151,6 +153,17 @@ export function ProductCatalogPanel({
           ))}
         </div>
       </aside>
+
+      {detailProduct && (
+        <ProductDetailModal
+          product={detailProduct}
+          onClose={() => setDetailProduct(null)}
+          onAdd={(productId) => {
+            onAdd(productId);
+            setDetailProduct(null);
+          }}
+        />
+      )}
     </>
   );
 }
