@@ -25,6 +25,7 @@ import {
 } from "@/lib/calculations";
 import type { Comment, Currency, Offer, OfferItem, OfferStatus, Product } from "@/lib/types";
 import { PhotoUploader } from "@/components/PhotoUploader";
+import { ProductDetailModal } from "@/components/ProductDetailModal";
 import { ProductCatalogPanel } from "@/components/ProductCatalogPanel";
 import { ShareModal } from "@/components/ShareModal";
 import { SummaryBlock } from "@/components/SummaryBlock";
@@ -56,6 +57,7 @@ export function OfferEditor({
   const [showCatalog, setShowCatalog] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -273,7 +275,10 @@ export function OfferEditor({
                               );
                             }}
                           />
-                          <div className="min-w-0">
+                          <button
+                            onClick={() => setDetailProduct(product)}
+                            className="min-w-0 text-left hover:opacity-70 transition-opacity"
+                          >
                             {!offer.hideCode && (
                               <div className="font-mono text-[10px] text-zinc-500">
                                 {product.code}
@@ -290,7 +295,7 @@ export function OfferEditor({
                                 Pozn.: {item.note}
                               </div>
                             )}
-                          </div>
+                          </button>
                         </div>
                       </td>
                       <td className="px-2 py-3 text-center">
@@ -542,6 +547,12 @@ export function OfferEditor({
         onClose={() => setShowShare(false)}
         shareId={offer.shareId}
       />
+      {detailProduct && (
+        <ProductDetailModal
+          product={detailProduct}
+          onClose={() => setDetailProduct(null)}
+        />
+      )}
     </div>
   );
 }
