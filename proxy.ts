@@ -17,6 +17,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!login|nabidka|api/auth|api/public|_next/static|_next/image|favicon\\.ico|fonts).*)",
+    "/((?!login|nabidka|api/auth|api/public|api/uploads|_next/static|_next/image|favicon\\.ico|fonts).*)",
   ],
 };

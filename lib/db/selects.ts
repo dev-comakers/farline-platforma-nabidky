@@ -67,7 +67,7 @@ export function mapProduct(p: DbProduct): Product {
     type: p.category.key as ProductType,
     unitPrice: p.unitPrice.toNumber(),
     currency: p.currency as Currency,
-    imageUrl: p.imagePath,
+    imageUrl: p.imagePath ? `/api/uploads/${p.imagePath}` : null,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
   };

@@ -6,35 +6,13 @@ import { ProductIconBox } from "./ProductIconBox";
 import { useToast } from "./Toast";
 import type { Product } from "@/lib/types";
 
-async function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-async function downscaleImage(dataUrl: string, maxDim = 800, quality = 0.82): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-      const w = Math.round(img.width * scale);
-      const h = Math.round(img.height * scale);
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject(new Error("no ctx"));
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillRect(0, 0, w, h);
-      ctx.drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL("image/jpeg", quality));
-    };
-    img.onerror = reject;
-    img.src = dataUrl;
-  });
+async function uploadPhoto(productId: string, file: File): Promise<string | null> {
+  const formData = new FormData();
+  formData.append("image", file);
+  const res = await fetch(`/api/products/${productId}/photo`, { method: "POST", body: formData });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.imagePath ? `/api/uploads/${data.imagePath}` : null;
 }
 
 export function PhotoUploader({
@@ -59,16 +37,12 @@ export function PhotoUploader({
     }
     setBusy(true);
     try {
-      const dataUrl = await readAsDataUrl(file);
-      const compact = await downscaleImage(dataUrl);
-      const res = await fetch(`/api/products/${product.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imagePath: compact }),
-      });
-      if (res.ok) {
-        onUpdate?.(compact);
+      const url = await uploadPhoto(product.id, file);
+      if (url) {
+        onUpdate?.(url);
         push("Fotografie nahrána");
+      } else {
+        push("Nahrání selhalo", "info");
       }
     } catch {
       push("Nahrání selhalo", "info");
@@ -79,11 +53,7 @@ export function PhotoUploader({
 
   const handleRemove = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const res = await fetch(`/api/products/${product.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imagePath: null }),
-    });
+    const res = await fetch(`/api/products/${product.id}/photo`, { method: "DELETE" });
     if (res.ok) onUpdate?.(null);
   };
 
@@ -141,7 +111,7 @@ export function PhotoUploader({
   );
 }
 
-export function ProductCardPhotoUploader({ product }: { product: Product }) {
+export function ProductCardPhotoUploader({ product, onUpdate }: { product: Product; onUpdate?: (imageUrl: string | null) => void }) {
   const { push } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -152,16 +122,13 @@ export function ProductCardPhotoUploader({ product }: { product: Product }) {
     if (!file.type.startsWith("image/")) return;
     setBusy(true);
     try {
-      const dataUrl = await readAsDataUrl(file);
-      const compact = await downscaleImage(dataUrl);
-      const res = await fetch(`/api/products/${product.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imagePath: compact }),
-      });
-      if (res.ok) {
-        setLocalImageUrl(compact);
+      const url = await uploadPhoto(product.id, file);
+      if (url) {
+        setLocalImageUrl(url);
+        onUpdate?.(url);
         push("Fotografie nahrána");
+      } else {
+        push("Nahrání selhalo", "info");
       }
     } finally {
       setBusy(false);

@@ -4,22 +4,30 @@ import { useMemo, useState } from "react";
 import {
   MagnifyingGlass,
   UploadSimple,
+  Plus,
   SquaresFour,
   ListBullets,
+  PencilSimple,
+  Trash,
 } from "@phosphor-icons/react/dist/ssr";
 import { ProductCard } from "@/components/ProductCard";
 import { ImportModal } from "@/components/ImportModal";
+import { ProductForm } from "@/components/ProductForm";
 import { PRODUCT_TYPE_LABEL, type ProductType, type Product } from "@/lib/types";
 import { ProductIconBox } from "@/components/ProductIconBox";
 import { formatCurrency } from "@/lib/calculations";
+import { useToast } from "@/components/Toast";
 
 export function KatalogClient({ initialProducts }: { initialProducts: Product[] }) {
-  const [products] = useState<Product[]>(initialProducts);
+  const { push } = useToast();
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [query, setQuery] = useState("");
   const [brand, setBrand] = useState<string | null>(null);
   const [type, setType] = useState<ProductType | null>(null);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [importOpen, setImportOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editProduct, setEditProduct] = useState<Product | undefined>(undefined);
 
   const brands = useMemo(
     () => Array.from(new Set(products.map((p) => p.brand))).sort(),
@@ -46,6 +54,30 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
       );
   }, [products, query, brand, type]);
 
+  const handleSaved = (saved: Product) => {
+    setProducts((prev) => {
+      const idx = prev.findIndex((p) => p.id === saved.id);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = saved;
+        return next;
+      }
+      return [saved, ...prev];
+    });
+  };
+
+  const handleDelete = async (product: Product) => {
+    if (!confirm(`Smazat produkt „${product.name}"?`)) return;
+    const res = await fetch(`/api/products/${product.id}`, { method: "DELETE" });
+    if (res.ok) {
+      setProducts((prev) => prev.filter((p) => p.id !== product.id));
+      push("Produkt smazán");
+    } else {
+      const data = await res.json().catch(() => ({}));
+      push(data.error?.message ?? "Smazání selhalo", "info");
+    }
+  };
+
   return (
     <div className="px-10 py-8 max-w-[1400px]">
       <header className="flex items-end justify-between mb-8">
@@ -63,13 +95,21 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
             </span>
           </h1>
         </div>
-        <button
-          onClick={() => setImportOpen(true)}
-          className="btn-tactile inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white shadow-sm"
-          style={{ background: "var(--accent)" }}
-        >
-          <UploadSimple size={16} weight="bold" /> Importovat CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setImportOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-zinc-700 border border-zinc-200 bg-white hover:bg-zinc-50"
+          >
+            <UploadSimple size={16} weight="bold" /> Importovat CSV
+          </button>
+          <button
+            onClick={() => { setEditProduct(undefined); setFormOpen(true); }}
+            className="btn-tactile inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white shadow-sm"
+            style={{ background: "var(--accent)" }}
+          >
+            <Plus size={16} weight="bold" /> Přidat produkt
+          </button>
+        </div>
       </header>
 
       <div className="flex items-center gap-3 mb-4">
@@ -140,7 +180,25 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
       ) : view === "grid" ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {filtered.map((p, i) => (
-            <ProductCard key={p.id} product={p} index={i} />
+            <div key={p.id} className="relative group/card">
+              <ProductCard product={p} index={i} />
+              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                <button
+                  onClick={() => { setEditProduct(p); setFormOpen(true); }}
+                  className="p-1.5 bg-white rounded-lg border border-zinc-200 shadow-sm text-zinc-600 hover:text-zinc-900"
+                  title="Upravit"
+                >
+                  <PencilSimple size={12} />
+                </button>
+                <button
+                  onClick={() => handleDelete(p)}
+                  className="p-1.5 bg-white rounded-lg border border-zinc-200 shadow-sm text-red-500 hover:text-red-700"
+                  title="Smazat"
+                >
+                  <Trash size={12} />
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       ) : (
@@ -148,7 +206,7 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
           {filtered.map((p) => (
             <div
               key={p.id}
-              className="flex items-center gap-4 px-4 py-3 border-b border-zinc-100 last:border-b-0 hover:bg-zinc-50/60"
+              className="flex items-center gap-4 px-4 py-3 border-b border-zinc-100 last:border-b-0 hover:bg-zinc-50/60 group"
             >
               <ProductIconBox type={p.type} size="sm" imageUrl={p.imageUrl} />
               <div className="flex-1 min-w-0">
@@ -166,12 +224,34 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
               <span className="font-mono tabular-nums text-sm font-medium text-zinc-900 min-w-[120px] text-right">
                 {formatCurrency(p.unitPrice, p.currency)}
               </span>
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                <button
+                  onClick={() => { setEditProduct(p); setFormOpen(true); }}
+                  className="p-1.5 rounded-lg border border-zinc-200 text-zinc-500 hover:text-zinc-900"
+                  title="Upravit"
+                >
+                  <PencilSimple size={12} />
+                </button>
+                <button
+                  onClick={() => handleDelete(p)}
+                  className="p-1.5 rounded-lg border border-zinc-200 text-red-400 hover:text-red-600"
+                  title="Smazat"
+                >
+                  <Trash size={12} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
 
       <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
+      <ProductForm
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        product={editProduct}
+        onSaved={handleSaved}
+      />
     </div>
   );
 }
