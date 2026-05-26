@@ -16,9 +16,10 @@ import {
   formatDateTime,
   formatDate,
 } from "@/lib/calculations";
-import type { Comment, Offer, Product } from "@/lib/types";
+import type { Comment, Offer, Product, ProductCategory, CategoryField } from "@/lib/types";
 import { ProductIconBox } from "@/components/ProductIconBox";
 import { SummaryBlock } from "@/components/SummaryBlock";
+import { ProductDetailModal } from "@/components/ProductDetailModal";
 import { useToast } from "@/components/Toast";
 import { exportOfferToPdf } from "@/lib/pdf-export";
 import { exportOfferToExcel } from "@/lib/excel-export";
@@ -27,13 +28,21 @@ export function NabidkaPublic({
   offer,
   snapshotProducts,
   initialComments,
+  categories = [],
 }: {
   offer: Omit<Offer, "internalNote">;
   snapshotProducts: Product[];
   initialComments: Comment[];
+  categories?: ProductCategory[];
 }) {
   const { push } = useToast();
   const [comments, setComments] = useState<Comment[]>(initialComments);
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+
+  const getCategoryFields = (product: Product): CategoryField[] => {
+    const cat = categories.find((c) => c.key === product.type);
+    return cat?.fields ?? [];
+  };
 
   const productsById = useMemo(
     () => new Map(snapshotProducts.map((p) => [p.id, p])),
@@ -129,7 +138,11 @@ export function NabidkaPublic({
                 const before = itemTotalBeforeDiscount(item, p);
                 const after = itemTotalAfterDiscount(item, p);
                 return (
-                  <tr key={item.id} className="border-t border-zinc-100">
+                  <tr
+                    key={item.id}
+                    className="border-t border-zinc-100 hover:bg-zinc-50/60 cursor-pointer transition-colors"
+                    onClick={() => setDetailProduct(p)}
+                  >
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <ProductIconBox type={p.type} size="xs" imageUrl={p.imageUrl} />
@@ -272,6 +285,14 @@ export function NabidkaPublic({
           Powered by Farline Nabídky — coMakers.cz
         </footer>
       </main>
+
+      {detailProduct && (
+        <ProductDetailModal
+          product={detailProduct}
+          categoryFields={getCategoryFields(detailProduct)}
+          onClose={() => setDetailProduct(null)}
+        />
+      )}
     </div>
   );
 }

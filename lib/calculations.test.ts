@@ -18,6 +18,8 @@ const makeProduct = (unitPrice: number): Product => ({
   unitPrice,
   currency: "CZK",
   imageUrl: null,
+  technicalSheetUrl: null,
+  parameters: {},
   createdAt: "2024-01-01T00:00:00Z",
   updatedAt: "2024-01-01T00:00:00Z",
 });

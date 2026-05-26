@@ -3,9 +3,7 @@
 import { useState, useEffect } from "react";
 import { X } from "@phosphor-icons/react/dist/ssr";
 import { useToast } from "./Toast";
-import type { Product } from "@/lib/types";
-
-type Category = { id: string; key: string; label: string };
+import type { CategoryField, Product, ProductCategory } from "@/lib/types";
 
 interface ProductFormProps {
   open: boolean;
@@ -14,9 +12,11 @@ interface ProductFormProps {
   onSaved: (product: Product) => void;
 }
 
+const inputCls = "mt-1 w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400";
+
 export function ProductForm({ open, onClose, product, onSaved }: ProductFormProps) {
   const { push } = useToast();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [busy, setBusy] = useState(false);
 
   const [code, setCode] = useState("");
@@ -26,6 +26,7 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
   const [categoryId, setCategoryId] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [currency, setCurrency] = useState<"CZK" | "USD" | "EUR">("CZK");
+  const [params, setParams] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!open) return;
@@ -45,16 +46,15 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
       setCategoryId("");
       setUnitPrice(String(product.unitPrice));
       setCurrency(product.currency);
+      setParams(product.parameters ?? {});
     } else {
-      setCode("");
-      setName("");
-      setBrand("");
-      setDecor("");
-      setCategoryId("");
-      setUnitPrice("");
-      setCurrency("CZK");
+      setCode(""); setName(""); setBrand(""); setDecor("");
+      setCategoryId(""); setUnitPrice(""); setCurrency("CZK"); setParams({});
     }
   }, [open, product]);
+
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const categoryFields: CategoryField[] = selectedCategory?.fields ?? [];
 
   if (!open) return null;
 
@@ -68,7 +68,7 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
 
     setBusy(true);
     try {
-      const body = { code, name, brand, decor, categoryId, unitPrice: price, currency };
+      const body = { code, name, brand, decor, categoryId, unitPrice: price, currency, parameters: params };
       const url = product ? `/api/products/${product.id}` : "/api/products";
       const method = product ? "PATCH" : "POST";
 
@@ -79,10 +79,7 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
       });
 
       const data = await res.json();
-      if (!res.ok) {
-        push(data.error?.message ?? "Chyba při ukládání", "info");
-        return;
-      }
+      if (!res.ok) { push(data.error?.message ?? "Chyba při ukládání", "info"); return; }
 
       onSaved(data.product);
       push(product ? "Produkt uložen" : "Produkt přidán");
@@ -96,97 +93,61 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/30 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-lg mx-4 shadow-2xl">
-        <header className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between">
-          <h3
-            className="text-lg font-semibold text-zinc-900"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
+      <div className="bg-white rounded-2xl w-full max-w-lg mx-4 shadow-2xl max-h-[90vh] flex flex-col">
+        <header className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between shrink-0">
+          <h3 className="text-lg font-semibold text-zinc-900" style={{ fontFamily: "var(--font-display)" }}>
             {product ? "Upravit produkt" : "Nový produkt"}
           </h3>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-500">
             <X size={16} />
           </button>
         </header>
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 overflow-y-auto">
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs text-zinc-500 uppercase tracking-wider">Kód *</span>
-              <input
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="PRO-001"
-                className="mt-1 w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400 font-mono"
-              />
+              <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="PRO-001"
+                className={inputCls + " font-mono"} />
             </label>
             <label className="block">
               <span className="text-xs text-zinc-500 uppercase tracking-wider">Kategorie *</span>
-              <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className="mt-1 w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400"
-              >
+              <select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setParams({}); }}
+                className={inputCls}>
                 <option value="">Vybrat…</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
-                  </option>
-                ))}
+                {categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
               </select>
             </label>
           </div>
 
           <label className="block">
             <span className="text-xs text-zinc-500 uppercase tracking-wider">Název *</span>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Umyvadlová baterie Premium"
-              className="mt-1 w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400"
-            />
+            <input value={name} onChange={(e) => setName(e.target.value)}
+              placeholder="Umyvadlová baterie Premium" className={inputCls} />
           </label>
 
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs text-zinc-500 uppercase tracking-wider">Značka *</span>
-              <input
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-                placeholder="Hansgrohe"
-                className="mt-1 w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400"
-              />
+              <input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Hansgrohe" className={inputCls} />
             </label>
             <label className="block">
               <span className="text-xs text-zinc-500 uppercase tracking-wider">Dekor</span>
-              <input
-                value={decor}
-                onChange={(e) => setDecor(e.target.value)}
-                placeholder="Chrom"
-                className="mt-1 w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400"
-              />
+              <input value={decor} onChange={(e) => setDecor(e.target.value)} placeholder="Chrom" className={inputCls} />
             </label>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs text-zinc-500 uppercase tracking-wider">Cena bez DPH *</span>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={unitPrice}
-                onChange={(e) => setUnitPrice(e.target.value)}
-                placeholder="12 500"
-                className="mt-1 w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400 font-mono tabular-nums"
-              />
+              <input type="number" min="0" step="0.01" value={unitPrice}
+                onChange={(e) => setUnitPrice(e.target.value)} placeholder="12 500"
+                className={inputCls + " font-mono tabular-nums"} />
             </label>
             <label className="block">
               <span className="text-xs text-zinc-500 uppercase tracking-wider">Měna</span>
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value as "CZK" | "USD" | "EUR")}
-                className="mt-1 w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400"
-              >
+              <select value={currency} onChange={(e) => setCurrency(e.target.value as "CZK" | "USD" | "EUR")}
+                className={inputCls}>
                 <option value="CZK">CZK</option>
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
@@ -194,20 +155,43 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
             </label>
           </div>
 
+          {categoryFields.length > 0 && (
+            <div>
+              <div className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Parametry kategorie</div>
+              <div className="space-y-2">
+                {categoryFields.map((f) => (
+                  <label key={f.key} className="block">
+                    <span className="text-xs text-zinc-500">{f.label}</span>
+                    {f.type === "select" ? (
+                      <select
+                        value={params[f.key] ?? ""}
+                        onChange={(e) => setParams((p) => ({ ...p, [f.key]: e.target.value }))}
+                        className={inputCls}
+                      >
+                        <option value="">—</option>
+                        {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    ) : (
+                      <input
+                        type={f.type === "number" ? "number" : "text"}
+                        value={params[f.key] ?? ""}
+                        onChange={(e) => setParams((p) => ({ ...p, [f.key]: e.target.value }))}
+                        className={inputCls + (f.type === "number" ? " font-mono tabular-nums" : "")}
+                      />
+                    )}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 rounded-lg"
-            >
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 rounded-lg">
               Zrušit
             </button>
-            <button
-              type="submit"
-              disabled={busy}
+            <button type="submit" disabled={busy}
               className="btn-tactile px-5 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-60"
-              style={{ background: "var(--accent)" }}
-            >
+              style={{ background: "var(--accent)" }}>
               {busy ? "Ukládám…" : product ? "Uložit" : "Přidat produkt"}
             </button>
           </div>

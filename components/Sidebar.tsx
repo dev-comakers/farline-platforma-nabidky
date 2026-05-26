@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { House, FileText, Package } from "@phosphor-icons/react/dist/ssr";
+import { House, FileText, Package, Gear } from "@phosphor-icons/react/dist/ssr";
 import type { PhosphorIcon } from "@/lib/productIcons";
 
 interface NavItem {
@@ -23,6 +23,10 @@ const NAV: NavItem[] = [
   { href: "/", label: "Přehled", icon: House },
   { href: "/nabidky", label: "Nabídky", icon: FileText, matchPrefix: "/nabidky" },
   { href: "/katalog", label: "Katalog produktů", icon: Package, matchPrefix: "/katalog" },
+];
+
+const ADMIN_NAV: NavItem[] = [
+  { href: "/nastaveni/kategorie", label: "Kategorie", icon: Gear, matchPrefix: "/nastaveni" },
 ];
 
 function getInitials(name: string): string {
@@ -110,6 +114,34 @@ export function Sidebar({
             </Link>
           );
         })}
+
+        {user?.role === "admin" && (
+          <div className="mt-4 pt-4 border-t border-zinc-100">
+            <div className="px-4 mb-1 text-[10px] uppercase tracking-wider text-zinc-400">Admin</div>
+            {ADMIN_NAV.map(({ href, label, icon: Icon, matchPrefix }) => {
+              const isActive = matchPrefix
+                ? pathname.startsWith(matchPrefix)
+                : pathname === href;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`group relative flex items-center gap-3 px-4 py-2.5 my-0.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-zinc-50 text-zinc-900"
+                      : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50/70"
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-r-full" style={{ background: "var(--accent)" }} />
+                  )}
+                  <Icon size={18} weight={isActive ? "duotone" : "regular"} color={isActive ? "var(--accent)" : undefined} />
+                  <span className="flex-1">{label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </nav>
 
       <div className="px-4 py-4 border-t border-zinc-200/70">

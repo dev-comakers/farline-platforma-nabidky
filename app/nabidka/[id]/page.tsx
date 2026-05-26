@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { offerListSelect, mapOffer, snapshotProducts, commentSelect, mapComment } from "@/lib/db/selects";
 import { NabidkaPublic } from "@/components/NabidkaPublic";
+import type { ProductCategory } from "@/lib/types";
 
 export default async function NabidkaPublicPage({
   params,
@@ -10,10 +11,19 @@ export default async function NabidkaPublicPage({
 }) {
   const { id: shareId } = await params;
 
-  const dbOffer = await prisma.offer.findUnique({
-    where: { shareId },
-    select: { ...offerListSelect, shareEnabled: true },
-  });
+  const [dbOffer, dbCategories] = await Promise.all([
+    prisma.offer.findUnique({
+      where: { shareId },
+      select: { ...offerListSelect, shareEnabled: true },
+    }),
+    prisma.productCategory.findMany({
+      orderBy: { order: "asc" },
+      select: {
+        id: true, key: true, label: true, order: true,
+        fields: { orderBy: { order: "asc" }, select: { id: true, key: true, label: true, type: true, options: true, order: true } },
+      },
+    }),
+  ]);
 
   if (!dbOffer || !dbOffer.shareEnabled) notFound();
 
@@ -22,6 +32,11 @@ export default async function NabidkaPublicPage({
     orderBy: { createdAt: "asc" },
     select: commentSelect,
   });
+
+  const categories: ProductCategory[] = dbCategories.map((c) => ({
+    id: c.id, key: c.key, label: c.label, order: c.order,
+    fields: c.fields.map((f) => ({ id: f.id, key: f.key, label: f.label, type: f.type as "text" | "number" | "select", options: f.options, order: f.order })),
+  }));
 
   const { internalNote: _i, ...publicOffer } = mapOffer(dbOffer);
   const hideCode = dbOffer.hideCode;
@@ -45,6 +60,7 @@ export default async function NabidkaPublicPage({
       offer={publicOffer}
       snapshotProducts={snapProds}
       initialComments={comments}
+      categories={categories}
     />
   );
 }
