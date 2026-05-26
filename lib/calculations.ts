@@ -26,12 +26,17 @@ export function offerSummary(offer: Offer, products: Product[]): OfferSummary {
   }
   totalBeforeDiscount = round2(totalBeforeDiscount);
   totalDiscount = round2(totalDiscount);
+  const totalAfterDiscount = round2(totalBeforeDiscount - totalDiscount);
+  const vatAmount = offer.showVat ? round2(totalAfterDiscount * offer.vatRate) : 0;
   return {
     totalBeforeDiscount,
     totalDiscount,
-    totalAfterDiscount: round2(totalBeforeDiscount - totalDiscount),
+    totalAfterDiscount,
+    vatAmount,
+    totalWithVat: round2(totalAfterDiscount + vatAmount),
     itemCount: offer.items.length,
     currency: offer.currency,
+    showVat: offer.showVat,
   };
 }
 
@@ -40,6 +45,14 @@ export function formatCurrency(n: number, currency: Currency): string {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(n);
+  }
+  if (currency === "EUR") {
+    return new Intl.NumberFormat("cs-CZ", {
+      style: "currency",
+      currency: "EUR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(n);

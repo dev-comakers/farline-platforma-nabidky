@@ -159,14 +159,19 @@ export async function exportOfferToPdf(offer: Offer, products: Product[]) {
   doc.setLineWidth(0.5);
   doc.line(margin, 38, pageWidth - margin, 38);
 
+  const hideCode = offer.hideCode;
+
   // ------- TABLE with images in col 1 (Foto) -------
+  const headCols = ["#", "Foto", ...(!hideCode ? ["Kód"] : []), "Název", "Dekor", "Značka", "Ks", "Jedn. cena", "Celkem", "Sleva", "Sleva Kč", "Po slevě"];
+  const PHOTO_COL_INDEX = 1;
+
   const rows = offer.items.map((item, idx) => {
     const p = productsById.get(item.productId);
     if (!p) return [];
     return [
       String(idx + 1),
-      "", // photo column, drawn via hook
-      p.code,
+      "",
+      ...(!hideCode ? [p.code] : []),
       p.name,
       p.decor,
       p.brand,
@@ -179,25 +184,28 @@ export async function exportOfferToPdf(offer: Offer, products: Product[]) {
     ];
   });
 
-  const ROW_MIN_HEIGHT = 18; // mm — leaves room for thumbnail
-  const PHOTO_COL_INDEX = 1;
+  const ROW_MIN_HEIGHT = 18;
+
+  // Column styles: base cols after photo shift by 1 when hideCode
+  const colOffset = hideCode ? 0 : 1;
+  const columnStyles: Record<number, object> = {
+    0: { cellWidth: 7, halign: "center" },
+    1: { cellWidth: 22, halign: "center" },
+    ...(hideCode ? {} : ({ 2: { cellWidth: 20 } } as Record<number, object>)),
+    [2 + colOffset]: { cellWidth: hideCode ? 58 : 48 },
+    [3 + colOffset]: { cellWidth: 20 },
+    [4 + colOffset]: { cellWidth: 19 },
+    [5 + colOffset]: { cellWidth: 8, halign: "center" },
+    [6 + colOffset]: { cellWidth: 20, halign: "right" },
+    [7 + colOffset]: { cellWidth: 20, halign: "right" },
+    [8 + colOffset]: { cellWidth: 14, halign: "center" },
+    [9 + colOffset]: { cellWidth: 20, halign: "right" },
+    [10 + colOffset]: { cellWidth: 23, halign: "right", fontStyle: "bold", textColor: BRASS },
+  };
 
   autoTable(doc, {
     startY: 44,
-    head: [[
-      "#",
-      "Foto",
-      "Kód",
-      "Název",
-      "Dekor",
-      "Značka",
-      "Ks",
-      "Jedn. cena",
-      "Celkem",
-      "Sleva",
-      "Sleva Kč",
-      "Po slevě",
-    ]],
+    head: [headCols],
     body: rows,
     theme: "plain",
     styles: {
@@ -222,25 +230,7 @@ export async function exportOfferToPdf(offer: Offer, products: Product[]) {
       lineWidth: { bottom: 0.4, top: 0, left: 0, right: 0 },
       minCellHeight: 7,
     },
-    columnStyles: {
-      0: { cellWidth: 7, halign: "center" },
-      1: { cellWidth: 22, halign: "center" }, // Foto
-      2: { cellWidth: 20 },                    // Kód
-      3: { cellWidth: 48 },                    // Název
-      4: { cellWidth: 20 },                    // Dekor
-      5: { cellWidth: 19 },                    // Značka
-      6: { cellWidth: 8, halign: "center" },
-      7: { cellWidth: 20, halign: "right" },
-      8: { cellWidth: 20, halign: "right" },
-      9: { cellWidth: 14, halign: "center" },
-      10: { cellWidth: 20, halign: "right" },
-      11: {
-        cellWidth: 23,
-        halign: "right",
-        fontStyle: "bold",
-        textColor: BRASS,
-      },
-    },
+    columnStyles,
     didDrawCell: (data) => {
       if (data.section !== "body") return;
       if (data.column.index !== PHOTO_COL_INDEX) return;
@@ -279,44 +269,44 @@ export async function exportOfferToPdf(offer: Offer, products: Product[]) {
   doc.setTextColor(...ZINC_500);
   doc.text("Celková cena před slevou", margin, finalY + 7);
   doc.text("Celková sleva", pageWidth / 2 - 30, finalY + 7);
-  doc.text("Cena po slevě (bez DPH)", pageWidth - margin, finalY + 7, {
-    align: "right",
-  });
+
+  const lastLabel = offer.showVat ? "Základ DPH (bez DPH)" : "Cena po slevě (bez DPH)";
+  doc.text(lastLabel, pageWidth - margin, finalY + 7, { align: "right" });
 
   doc.setFontSize(13);
   doc.setFont("Roboto", "bold");
   doc.setTextColor(...ZINC_900);
-  doc.text(
-    formatCurrency(summary.totalBeforeDiscount, offer.currency),
-    margin,
-    finalY + 14
-  );
+  doc.text(formatCurrency(summary.totalBeforeDiscount, offer.currency), margin, finalY + 14);
   doc.setTextColor(...ZINC_500);
-  doc.text(
-    `− ${formatCurrency(summary.totalDiscount, offer.currency)}`,
-    pageWidth / 2 - 30,
-    finalY + 14
-  );
+  doc.text(`− ${formatCurrency(summary.totalDiscount, offer.currency)}`, pageWidth / 2 - 30, finalY + 14);
   doc.setTextColor(...BRASS);
-  doc.text(
-    formatCurrency(summary.totalAfterDiscount, offer.currency),
-    pageWidth - margin,
-    finalY + 14,
-    { align: "right" }
-  );
+  doc.text(formatCurrency(summary.totalAfterDiscount, offer.currency), pageWidth - margin, finalY + 14, { align: "right" });
+
+  if (offer.showVat) {
+    const vatY = finalY + 22;
+    doc.setFont("Roboto", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...ZINC_500);
+    doc.text(`DPH ${Math.round(offer.vatRate * 100)} %`, pageWidth / 2 - 30, vatY);
+    doc.text("Celkem s DPH", pageWidth - margin, vatY, { align: "right" });
+
+    doc.setFontSize(13);
+    doc.setFont("Roboto", "bold");
+    doc.setTextColor(...ZINC_500);
+    doc.text(formatCurrency(summary.vatAmount, offer.currency), pageWidth / 2 - 30, vatY + 7);
+    doc.setTextColor(...BRASS);
+    doc.text(formatCurrency(summary.totalWithVat, offer.currency), pageWidth - margin, vatY + 7, { align: "right" });
+  }
 
   // Footer
+  const footerNote = offer.showVat
+    ? "Platnost nabídky 30 dní od data vystavení."
+    : "Ceny jsou uvedeny bez DPH. Platnost nabídky 30 dní od data vystavení.";
   doc.setFont("Roboto", "normal");
   doc.setFontSize(7);
   doc.setTextColor(...ZINC_500);
-  doc.text(
-    "Ceny jsou uvedeny bez DPH. Platnost nabídky 30 dní od data vystavení.",
-    margin,
-    pageHeight - 8
-  );
-  doc.text("Farline Living", pageWidth - margin, pageHeight - 8, {
-    align: "right",
-  });
+  doc.text(footerNote, margin, pageHeight - 8);
+  doc.text("Farline Living", pageWidth - margin, pageHeight - 8, { align: "right" });
 
   const safeName =
     offer.name.replace(/[^\p{L}\p{N}\s\-_]/gu, "").trim() || "nabidka";

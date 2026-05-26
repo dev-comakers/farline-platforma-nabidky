@@ -1,13 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  House,
-  FileText,
-  Package,
-} from "@phosphor-icons/react/dist/ssr";
-import { useStore } from "@/lib/store";
+import { usePathname, useRouter } from "next/navigation";
+import { House, FileText, Package, Gear, Users } from "@phosphor-icons/react/dist/ssr";
 import type { PhosphorIcon } from "@/lib/productIcons";
 
 interface NavItem {
@@ -17,16 +12,48 @@ interface NavItem {
   matchPrefix?: string;
 }
 
+interface SidebarUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
 const NAV: NavItem[] = [
   { href: "/", label: "Přehled", icon: House },
   { href: "/nabidky", label: "Nabídky", icon: FileText, matchPrefix: "/nabidky" },
   { href: "/katalog", label: "Katalog produktů", icon: Package, matchPrefix: "/katalog" },
 ];
 
-export function Sidebar() {
+const ADMIN_NAV: NavItem[] = [
+  { href: "/nastaveni/kategorie", label: "Kategorie", icon: Gear, matchPrefix: "/nastaveni/kategorie" },
+  { href: "/nastaveni/uzivatele", label: "Uživatelé", icon: Users, matchPrefix: "/nastaveni/uzivatele" },
+];
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+export function Sidebar({
+  user,
+  newCommentsCount = 0,
+}: {
+  user: SidebarUser | null;
+  newCommentsCount?: number;
+}) {
   const pathname = usePathname();
-  const { comments } = useStore();
-  const newCommentsCount = comments.filter((c) => c.isNew).length;
+  const router = useRouter();
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <aside className="flex flex-col h-screen sticky top-0 w-64 border-r border-zinc-200/70 bg-white">
@@ -50,7 +77,9 @@ export function Sidebar() {
       <nav className="flex-1 px-3">
         {NAV.map(({ href, label, icon: Icon, matchPrefix }) => {
           const isActive = matchPrefix
-            ? pathname === href || pathname.startsWith(matchPrefix + "/") || pathname === matchPrefix
+            ? pathname === href ||
+              pathname.startsWith(matchPrefix + "/") ||
+              pathname === matchPrefix
             : pathname === href;
           const showBadge = href === "/nabidky" && newCommentsCount > 0;
           return (
@@ -86,22 +115,61 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        {user?.role === "admin" && (
+          <div className="mt-4 pt-4 border-t border-zinc-100">
+            <div className="px-4 mb-1 text-[10px] uppercase tracking-wider text-zinc-400">Admin</div>
+            {ADMIN_NAV.map(({ href, label, icon: Icon, matchPrefix }) => {
+              const isActive = matchPrefix
+                ? pathname.startsWith(matchPrefix)
+                : pathname === href;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`group relative flex items-center gap-3 px-4 py-2.5 my-0.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-zinc-50 text-zinc-900"
+                      : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50/70"
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-r-full" style={{ background: "var(--accent)" }} />
+                  )}
+                  <Icon size={18} weight={isActive ? "duotone" : "regular"} color={isActive ? "var(--accent)" : undefined} />
+                  <span className="flex-1">{label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </nav>
 
       <div className="px-4 py-4 border-t border-zinc-200/70">
         <div className="flex items-center gap-3">
           <div
-            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
             style={{ background: "var(--accent)" }}
           >
-            FK
+            {user ? getInitials(user.name) : "?"}
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium text-zinc-900 truncate">
-              Filip Kott
+              {user?.name ?? "—"}
             </div>
             <div className="text-xs text-zinc-500 truncate">Farline Living</div>
           </div>
+          <button
+            onClick={handleLogout}
+            title="Odhlásit se"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors flex-shrink-0"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
         </div>
       </div>
     </aside>

@@ -1,3 +1,22 @@
+export type FieldType = "text" | "number" | "select";
+
+export interface CategoryField {
+  id: string;
+  key: string;
+  label: string;
+  type: FieldType;
+  options: string[];
+  order: number;
+}
+
+export interface ProductCategory {
+  id: string;
+  key: string;
+  label: string;
+  order: number;
+  fields: CategoryField[];
+}
+
 export type ProductType =
   | "umyvadlove_baterie"
   | "vanove_baterie"
@@ -12,7 +31,7 @@ export type ProductType =
   | "sprchove_kanaly"
   | "ostatni";
 
-export type Currency = "CZK" | "USD";
+export type Currency = "CZK" | "USD" | "EUR";
 
 export type OfferStatus =
   | "rozpracovana"
@@ -30,6 +49,8 @@ export interface Product {
   unitPrice: number;
   currency: Currency;
   imageUrl: string | null;
+  technicalSheetUrl: string | null;
+  parameters: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 }
@@ -40,16 +61,23 @@ export interface OfferItem {
   quantity: number;
   discountPercent: number;
   note?: string;
+  confirmed: boolean;
+  ordered: boolean;
+  received: boolean;
 }
 
 export interface Offer {
   id: string;
+  shareId: string;
   name: string;
   architect: string;
   status: OfferStatus;
   currency: Currency;
   items: OfferItem[];
-  internalNote: string | null;
+  internalNote?: string | null;
+  showVat: boolean;
+  vatRate: number;
+  hideCode: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -68,8 +96,11 @@ export interface OfferSummary {
   totalBeforeDiscount: number;
   totalDiscount: number;
   totalAfterDiscount: number;
+  vatAmount: number;
+  totalWithVat: number;
   itemCount: number;
   currency: Currency;
+  showVat: boolean;
 }
 
 export const PRODUCT_TYPE_LABEL: Record<ProductType, string> = {

@@ -1,23 +1,44 @@
-"use client";
-
 import Link from "next/link";
 import {
   FileText,
   CircleDashed,
   PaperPlaneTilt,
   ChatCircleDots,
-  Plus,
   ArrowRight,
+  Package,
 } from "@phosphor-icons/react/dist/ssr";
-import { useStore, createEmptyOffer } from "@/lib/store";
+import { prisma } from "@/lib/db/prisma";
 import { MetricCard } from "@/components/MetricCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { offerSummary, formatCurrency, formatRelative } from "@/lib/calculations";
-import { useRouter } from "next/navigation";
+import { formatCurrency, formatRelative } from "@/lib/calculations";
+import { offerListSelect, mapOffer, commentSelect, mapComment, snapshotProducts } from "@/lib/db/selects";
+import { offerSummary } from "@/lib/calculations";
+import { CreateOfferButton } from "@/components/CreateOfferButton";
+import type { Prisma } from "@prisma/client";
 
-export default function DashboardPage() {
-  const { offers, products, comments, addOffer } = useStore();
-  const router = useRouter();
+type DbOffer = Prisma.OfferGetPayload<{ select: typeof offerListSelect }>;
+
+function offerTotal(dbOffer: DbOffer): number {
+  const offer = mapOffer(dbOffer);
+  const products = snapshotProducts(dbOffer.items);
+  return offerSummary(offer, products).totalAfterDiscount;
+}
+
+export default async function DashboardPage() {
+  const [dbOffers, dbComments] = await Promise.all([
+    prisma.offer.findMany({
+      select: offerListSelect,
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.comment.findMany({
+      select: commentSelect,
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
+  ]);
+
+  const offers = dbOffers.map(mapOffer);
+  const comments = dbComments.map(mapComment);
 
   const counts = {
     total: offers.length,
@@ -26,9 +47,7 @@ export default function DashboardPage() {
     noveKomentare: comments.filter((c) => c.isNew).length,
   };
 
-  const recentOffers = [...offers]
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    .slice(0, 5);
+  const recentDbOffers = dbOffers.slice(0, 5);
 
   const activity = [
     ...comments.map((c) => {
@@ -56,12 +75,6 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(b.when).getTime() - new Date(a.when).getTime())
     .slice(0, 6);
 
-  const handleCreate = () => {
-    const offer = createEmptyOffer();
-    addOffer(offer);
-    router.push(`/nabidky/${offer.id}`);
-  };
-
   return (
     <div className="px-10 py-8 max-w-[1400px]">
       <header className="flex items-end justify-between mb-8">
@@ -76,13 +89,16 @@ export default function DashboardPage() {
             Přehled
           </h1>
         </div>
-        <button
-          onClick={handleCreate}
-          className="btn-tactile inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white shadow-sm"
-          style={{ background: "var(--accent)" }}
-        >
-          <Plus size={16} weight="bold" /> Nová nabídka
-        </button>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/katalog"
+            className="btn-tactile inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
+          >
+            <Package size={16} weight="duotone" color="var(--accent)" />
+            Otevřít katalog
+          </Link>
+          <CreateOfferButton />
+        </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
@@ -124,18 +140,19 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {recentOffers.map((o) => {
-                  const summary = offerSummary(o, products);
+                {recentDbOffers.map((dbOffer) => {
+                  const o = mapOffer(dbOffer);
+                  const total = offerTotal(dbOffer);
                   return (
-                    <tr
-                      key={o.id}
-                      className="border-t border-zinc-100 hover:bg-zinc-50/70 cursor-pointer transition-colors"
-                      onClick={() => router.push(`/nabidky/${o.id}`)}
-                    >
-                      <td className="px-6 py-4 font-medium text-zinc-900">{o.name}</td>
+                    <tr key={o.id} className="border-t border-zinc-100 hover:bg-zinc-50/70 cursor-pointer transition-colors">
+                      <td className="px-6 py-4">
+                        <Link href={`/nabidky/${o.id}`} className="font-medium text-zinc-900 hover:underline">
+                          {o.name}
+                        </Link>
+                      </td>
                       <td className="px-6 py-4 text-zinc-600">{o.architect || "—"}</td>
                       <td className="px-6 py-4 text-right font-mono tabular-nums text-zinc-900">
-                        {formatCurrency(summary.totalAfterDiscount, o.currency)}
+                        {formatCurrency(total, o.currency)}
                       </td>
                       <td className="px-6 py-4">
                         <StatusBadge status={o.status} pulse />

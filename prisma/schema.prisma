@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  manager
+}
+
+enum OfferStatus {
+  rozpracovana
+  odeslana
+  okomentovana
+  potvrzena
+}
+
+enum Currency {
+  CZK
+  USD
+  EUR
+}
+
+enum FieldType {
+  text
+  number
+  select
+  textarea
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  role         Role     @default(manager)
+  passwordHash String
+  offers       Offer[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ProductCategory {
+  id       String          @id @default(uuid())
+  key      String          @unique
+  label    String
+  order    Int             @default(0)
+  fields   CategoryField[]
+  products Product[]
+}
+
+model CategoryField {
+  id         String          @id @default(uuid())
+  categoryId String
+  category   ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  key        String
+  label      String
+  type       FieldType       @default(text)
+  options    String[]
+  order      Int             @default(0)
+
+  @@unique([categoryId, key])
+}
+
+model Product {
+  id                 String          @id @default(uuid())
+  code               String          @unique
+  name               String
+  brand              String
+  decor              String
+  categoryId         String
+  category           ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  unitPrice          Decimal         @db.Decimal(12, 2)
+  currency           Currency        @default(CZK)
+  imagePath          String?
+  technicalSheetPath String?
+  parameters         Json            @default("{}")
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  offerItems         OfferItem[]
+
+  @@index([categoryId])
+  @@index([code])
+  @@index([brand])
+}
+
+model Offer {
+  id           String      @id @default(uuid())
+  shareId      String      @unique @default(uuid())
+  name         String      @default("Nová nabídka")
+  architect    String      @default("")
+  status       OfferStatus @default(rozpracovana)
+  currency     Currency    @default(CZK)
+  internalNote String?
+  showVat      Boolean     @default(true)
+  vatRate      Decimal     @default("0.21") @db.Decimal(5, 4)
+  hideCode     Boolean     @default(false)
+  shareEnabled Boolean     @default(true)
+  sharedAt     DateTime?
+  createdById  String?
+  createdBy    User?       @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  items        OfferItem[]
+  comments     Comment[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OfferItem {
+  id                String  @id @default(uuid())
+  offerId           String
+  offer             Offer   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  productId         String
+  product           Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity          Int     @default(1)
+  discountPercent   Decimal @default(0) @db.Decimal(5, 2)
+  unitPriceSnapshot Decimal @db.Decimal(12, 2)
+  note              String?
+  confirmed         Boolean @default(false)
+  ordered           Boolean @default(false)
+  received          Boolean @default(false)
+  position          Int     @default(0)
+
+  @@index([offerId])
+  @@index([productId])
+}
+
+model Comment {
+  id          String   @id @default(uuid())
+  offerId     String
+  offer       Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  authorName  String
+  authorEmail String
+  text        String
+  isNew       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([offerId])
+  @@index([isNew])
+}

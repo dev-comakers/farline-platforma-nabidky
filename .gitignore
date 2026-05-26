@@ -11,10 +11,16 @@ out/
 .env
 .env.local
 .env.*.local
+.env.production
 
 # misc
 .DS_Store
+.DS_Store?
+Thumbs.db
 *.pem
+*.key
+*.p12
+*.pfx
 
 # debug
 npm-debug.log*
@@ -24,3 +30,21 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code
+.claude/
+
+# editor
+.cursor/
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# os
+ehthumbs.db
+Desktop.ini
+
+# build artifacts
+/build
+/dist
