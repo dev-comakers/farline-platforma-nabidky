@@ -1,6 +1,53 @@
 import type { Offer, OfferItem, Product, Comment, OfferStatus, Currency, ProductType } from "@/lib/types";
 import type { Prisma } from "@prisma/client";
 
+export const offerPublicSelect = {
+  id: true,
+  shareId: true,
+  shareEnabled: true,
+  name: true,
+  architect: true,
+  status: true,
+  currency: true,
+  showVat: true,
+  vatRate: true,
+  hideCode: true,
+  createdAt: true,
+  updatedAt: true,
+  items: {
+    select: {
+      id: true,
+      productId: true,
+      quantity: true,
+      discountPercent: true,
+      unitPriceSnapshot: true,
+      note: true,
+      confirmed: true,
+      ordered: true,
+      received: true,
+      position: true,
+      product: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          brand: true,
+          decor: true,
+          unitPrice: true,
+          currency: true,
+          imagePath: true,
+          technicalSheetPath: true,
+          parameters: true,
+          createdAt: true,
+          updatedAt: true,
+          category: { select: { key: true } },
+        },
+      },
+    },
+    orderBy: { position: "asc" as const },
+  },
+} satisfies Prisma.OfferSelect;
+
 export const productSelect = {
   id: true,
   code: true,
@@ -63,6 +110,7 @@ export const commentSelect = {
 type DbProduct = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
 type DbOfferItem = Prisma.OfferItemGetPayload<{ select: typeof offerItemSelect }>;
 type DbOffer = Prisma.OfferGetPayload<{ select: typeof offerListSelect }>;
+type DbOfferPublic = Prisma.OfferGetPayload<{ select: typeof offerPublicSelect }>;
 type DbComment = Prisma.CommentGetPayload<{ select: typeof commentSelect }>;
 
 export function mapProduct(p: DbProduct): Product {
@@ -94,6 +142,49 @@ export function mapOfferItem(item: DbOfferItem): OfferItem {
     ordered: item.ordered,
     received: item.received,
   };
+}
+
+export type { DbOfferPublic };
+
+export function mapOfferPublic(o: DbOfferPublic): Omit<Offer, "internalNote"> {
+  return {
+    id: o.id,
+    shareId: o.shareId,
+    name: o.name,
+    architect: o.architect,
+    status: o.status as OfferStatus,
+    currency: o.currency as Currency,
+    showVat: o.showVat,
+    vatRate: o.vatRate.toNumber(),
+    hideCode: o.hideCode,
+    items: o.items.map((item) => ({
+      id: item.id,
+      productId: item.productId,
+      quantity: item.quantity,
+      discountPercent: item.discountPercent.toNumber(),
+      note: item.note ?? undefined,
+      confirmed: item.confirmed,
+      ordered: item.ordered,
+      received: item.received,
+    })),
+    createdAt: o.createdAt.toISOString(),
+    updatedAt: o.updatedAt.toISOString(),
+  };
+}
+
+export function snapshotProductsPublic(items: DbOfferPublic["items"]): Product[] {
+  const seen = new Set<string>();
+  const products: Product[] = [];
+  for (const item of items) {
+    if (!seen.has(item.productId)) {
+      seen.add(item.productId);
+      products.push({
+        ...mapProduct(item.product),
+        unitPrice: item.unitPriceSnapshot.toNumber(),
+      });
+    }
+  }
+  return products;
 }
 
 export function snapshotProducts(items: DbOfferItem[]): Product[] {
