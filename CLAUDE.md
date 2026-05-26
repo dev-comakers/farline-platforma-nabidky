@@ -115,6 +115,71 @@ UI-рядки — **чеська** (зберігати існуючі). Іден
 
 ---
 
+## Figma-дизайн (узгоджений, заморожений)
+
+Файл: `https://www.figma.com/design/cATUEsDfluk1F9X9d5f8mz/`  
+Сторінка: `Screens` (node `0:1`). Всі 9 екранів — фрейми верхнього рівня.
+
+| Екран | Figma node | Маршрут | Статус у коді |
+|---|---|---|---|
+| 01-homepage (Dashboard) | `1:2` | `/` | Є, майже відповідає |
+| 02-nabidky (Список КП) | `1:77` | `/nabidky` | Є, майже відповідає |
+| 03-katalog | `1:144` | `/katalog` | Є, майже відповідає |
+| 04-nabidka-detail (RD Nebušice, scroll) | `1:241` | `/nabidky/[id]` | Є, є дрібні відмінності |
+| 05-nabidka-katalog-panel (з відкритою панеллю) | `1:417` | `/nabidky/[id]` | Є |
+| 06-nabidka-adr (USD КП, повна) | `1:644` | `/nabidky/[id]` | Є |
+| 07-share-architekt (публічна сторінка) | `1:764` | `/nabidka/[id]` ← потрібно rename | Є як `share/[id]` |
+| 08-share-clicked (модалка «Sdílet odkaz») | `1:879` | `/nabidky/[id]` | Є як `ShareModal` |
+| 09-produkt-detail-modal | `1:1057` | `/katalog` (модалка) | **Відсутній** |
+
+### Ключові спостереження з Figma
+
+**Sidebar** (`components/Sidebar.tsx`):
+- Лого: «FARLINE» (великий, bold) + «LIVING · NABÍDKY» (малий, tracking-wide) — вже є
+- Навігація: Přehled, Nabídky (з badge), Katalog produktů — вже є
+- User внизу: аватар brass-кола «FK», ім'я + компанія — вже є
+
+**Dashboard** (`app/(internal)/page.tsx`):
+- Layout `grid-cols-[2fr_1fr]`: ліво — метрики+таблиця, право — Aktivita — **вже відповідає Figma**
+- 4 метрики: CELKEM NABÍDEK, ROZPRACOVANÉ, ODESLANÉ, NOVÉ KOMENTÁŘE — є
+- Таблиця «Poslední nabídky»: AKCE, ARCHITEKT, CENA, STAV — є
+- Aktivita: іконки PaperPlaneTilt (odeslána) і ChatCircleDots (komentář) з датою — є
+
+**Список КП** (`app/(internal)/nabidky/page.tsx`):
+- Таби-фільтри з лічильниками: Všechny N, Rozpracované N, Odeslané N, Okomentované N, Potvrzené N
+- Колонки таблиці: AKCE, ARCHITEKT, DATUM, POLOŽKY, CENA PO SLEVĚ, STAV
+
+**Каталог** (`app/(internal)/katalog/page.tsx`):
+- Пошук (wide input) + «Všechny ▾» dropdown-фільтр + «+ Přidat» button
+- Grid 4 колонки: фото placeholder, PRO-код (mono), назва, brand · decor, ціна
+
+**Конструктор КП** (`app/(internal)/nabidky/[id]/page.tsx`):
+- Хедер: «← Zpět na seznam» + status badge + дата «Vytvořeno»
+- **Права панель дій (sticky):** «Sdílet nabídku» (brass, primary) → після кліку «Sdílet odkaz» | «Označit jako odeslanou» | «Stáhnout PDF» | «Stáhnout Excel» | «Smazat nabídku» (red, destructive)
+- Таблиця позицій: PRODUKT (фото+код+назва+brand·decor), POČET, CENA JEDNOTKY, SLEVA, CENA PO SLEVĚ
+- Summary внизу: PŘED SLEVOU | SLEVA (accent color, minus) | CENA PO SLEVĚ
+- «Interní poznámka» textarea (тільки Filip)
+- «Komentáře architekta (N)» + «Označit jako přečtené» link
+
+**Публічна сторінка** (`app/share/[id]` → перейменувати на `app/nabidka/[id]`):
+- Центрований layout без sidebar
+- «FARLINE / LIVING» header (центр)
+- «NABÍDKA PRO» label → велика назва КП
+- Таблиця: PRODUKT, POČET, JEDNOTKA, SLEVA, CENA
+- Summary: PŘED SLEVOU | SLEVA | CENA PO SLEVĚ + кнопки PDF/Excel
+- Секція «Komentáře» → список + форма «Přidat komentář»
+
+**Модалка деталей продукту** (`09-produkt-detail-modal`) — **НОВИЙ компонент**:
+- Розмір: широка модалка (≈ 500px), overlay на каталозі
+- Ліво: велике фото продукту (square)
+- Право: PRO-код (mono, small), назва (H2), brand · decor, короткий опис, «CENA: X Kč» (bold)
+- Параметри (key-value рядки): Materiál, Šířka, Záruka, Kód
+- «Technický list» секція: dashed upload zone «Nahrát PDF» (max. 10 MB)
+- «+ Přidat do nabídky» (brass, full-width) внизу
+- ×-кнопка закриття
+
+---
+
 ## Поза скоупом (не реалізовувати)
 
 Money S3 інтеграція, логін-портал архітектора, AI-асистент, newsletter, AR-візуалізація, проєктний портал. При дрейфі туди — зупинитись і запитати.
