@@ -36,7 +36,7 @@ import { useToast } from "@/components/Toast";
 import { exportOfferToPdf } from "@/lib/pdf-export";
 import { exportOfferToExcel } from "@/lib/excel-export";
 
-type SaveStatus = "idle" | "saving" | "saved";
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 type ItemPatch = Partial<Pick<OfferItem, "quantity" | "discountPercent" | "note" | "confirmed" | "ordered" | "received">>;
 
 export function OfferEditor({
@@ -75,16 +75,18 @@ export function OfferEditor({
       const data = pendingPatchRef.current;
       pendingPatchRef.current = {};
       try {
-        await fetch(`/api/offers/${offer.id}`, {
+        const res = await fetch(`/api/offers/${offer.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
         });
+        if (!res.ok) throw new Error("save failed");
         setSaveStatus("saved");
         if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
         savedTimerRef.current = setTimeout(() => setSaveStatus("idle"), 2000);
       } catch {
-        setSaveStatus("idle");
+        setSaveStatus("error");
+        push("Chyba při ukládání nabídky", "info");
       }
     }, 1000);
   }, [offer.id]);
@@ -134,20 +136,33 @@ export function OfferEditor({
   };
 
   const handleUpdateItem = async (itemId: string, patch: ItemPatch) => {
-    setOffer((prev) => ({
-      ...prev,
-      items: prev.items.map((i) => i.id === itemId ? { ...i, ...patch } : i),
+    const prev = offer.items.find((i) => i.id === itemId);
+    setOffer((o) => ({
+      ...o,
+      items: o.items.map((i) => i.id === itemId ? { ...i, ...patch } : i),
     }));
-    await fetch(`/api/offers/${offer.id}/items/${itemId}`, {
+    const res = await fetch(`/api/offers/${offer.id}/items/${itemId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     });
+    if (!res.ok && prev) {
+      setOffer((o) => ({
+        ...o,
+        items: o.items.map((i) => i.id === itemId ? { ...i, ...prev } : i),
+      }));
+      push("Chyba při úpravě položky", "info");
+    }
   };
 
   const handleRemoveItem = async (itemId: string) => {
+    const itemsBefore = offer.items;
     setOffer((prev) => ({ ...prev, items: prev.items.filter((i) => i.id !== itemId) }));
-    await fetch(`/api/offers/${offer.id}/items/${itemId}`, { method: "DELETE" });
+    const res = await fetch(`/api/offers/${offer.id}/items/${itemId}`, { method: "DELETE" });
+    if (!res.ok) {
+      setOffer((prev) => ({ ...prev, items: itemsBefore }));
+      push("Chyba při odstranění položky", "info");
+    }
   };
 
   const handleShare = async () => {
@@ -157,8 +172,10 @@ export function OfferEditor({
       if (!alreadyShared && newStatus === "odeslana") {
         setOffer((prev) => ({ ...prev, status: "odeslana" }));
       }
+      setShowShare(true);
+    } else {
+      push("Sdílení selhalo", "info");
     }
-    setShowShare(true);
   };
 
   const handleMarkRead = async () => {
@@ -185,9 +202,10 @@ export function OfferEditor({
           >
             <ArrowLeft size={14} /> Zpět na seznam
           </button>
-          <span className="text-xs text-zinc-400 font-mono">
-            {saveStatus === "saving" && "Ukládání…"}
-            {saveStatus === "saved" && "Uloženo"}
+          <span className="text-xs font-mono">
+            {saveStatus === "saving" && <span className="text-zinc-400">Ukládání…</span>}
+            {saveStatus === "saved" && <span className="text-zinc-400">Uloženo</span>}
+            {saveStatus === "error" && <span className="text-red-500">Chyba uložení</span>}
           </span>
         </div>
 

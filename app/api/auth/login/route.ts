@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
 import { signToken } from "@/lib/auth";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkOnly, recordFailure } from "@/lib/rate-limit";
 import { loginSchema } from "@/lib/validation/auth";
 
 const WINDOW_MS = 15 * 60 * 1000;
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const rl = checkRateLimit(`login:${ip}`, MAX_FAILURES, WINDOW_MS);
+  const rl = checkOnly(`login:${ip}`, MAX_FAILURES, WINDOW_MS);
   if (!rl.ok) {
     return Response.json(
       { error: { code: "TOO_MANY_REQUESTS", message: "Too many failed attempts. Try again later." } },
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
   const passwordMatch = user ? await bcrypt.compare(password, user.passwordHash) : false;
 
   if (!user || !passwordMatch) {
+    recordFailure(`login:${ip}`, WINDOW_MS);
     return Response.json(
       { error: { code: "INVALID_CREDENTIALS", message: "Nesprávný e-mail nebo heslo" } },
       { status: 401 }
