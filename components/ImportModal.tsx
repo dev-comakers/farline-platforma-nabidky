@@ -1,8 +1,42 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { X, UploadSimple, FileCsv, Warning, CheckCircle, ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { X, UploadSimple, FileCsv, Warning, CheckCircle, ArrowLeft, DownloadSimple } from "@phosphor-icons/react/dist/ssr";
 import { useToast } from "./Toast";
+
+const TEMPLATE_COLUMNS = [
+  { col: "kód", required: true, desc: "Unikátní kód produktu", example: "LB-TAP-001" },
+  { col: "název", required: true, desc: "Název produktu", example: "Umyvadlová baterie Classic" },
+  { col: "značka", required: true, desc: "Výrobce / značka", example: "Lefroy Brooks" },
+  { col: "dekor", required: false, desc: "Povrchová úprava", example: "Chrom" },
+  { col: "typ", required: true, desc: "Klíč kategorie (viz seznam níže)", example: "umyvadlove_baterie" },
+  { col: "cena", required: true, desc: "Cena — číslo bez mezer", example: "15900" },
+  { col: "měna", required: false, desc: "CZK / USD / EUR — výchozí CZK", example: "CZK" },
+];
+
+const CATEGORY_KEYS = [
+  "umyvadlove_baterie", "vanove_baterie", "sprchove_sety", "hlavove_sprchy",
+  "podomitkove_moduly", "vany", "wc", "doplnky",
+  "kuchynske_baterie", "bidetove_baterie", "sprchove_kanaly", "ostatni",
+];
+
+const TEMPLATE_CSV = [
+  "kód,název,značka,dekor,typ,cena,měna",
+  "LB-TAP-001,Umyvadlová baterie Classic,Lefroy Brooks,Chrom,umyvadlove_baterie,15900,CZK",
+  "CB-VAN-002,Vanová baterie Noir,CoalBrook,Broušený nikl,vanove_baterie,22500,CZK",
+  "RD-SHW-003,Sprchový set Premium,Radomonte,Bílá mat,sprchove_sety,18750,EUR",
+  "VI-BAT-004,Volně stojící vana,Victoria Albert,,vany,89000,CZK",
+].join("\n");
+
+function downloadTemplate() {
+  const blob = new Blob(["﻿" + TEMPLATE_CSV], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "farline-import-sablona.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 interface ImportRowValid {
   index: number;
@@ -164,14 +198,40 @@ export function ImportModal({
                 />
               </div>
 
-              <div className="rounded-lg bg-zinc-50 border border-zinc-200 px-4 py-3 text-xs text-zinc-600">
-                <div className="font-medium text-zinc-700 mb-1">Očekávaná struktura (záhlaví)</div>
-                <span className="font-mono">kód, název, značka, dekor, typ, cena, měna</span>
-                <div className="mt-2 text-zinc-500">
-                  Sloupec <span className="font-mono">typ</span> musí odpovídat klíči kategorie
-                  (např. <span className="font-mono">umyvadlove_baterie</span>).
-                  Sloupec <span className="font-mono">měna</span> je volitelný (výchozí CZK).
-                  Existující produkty se stejným kódem budou aktualizovány.
+              <div className="rounded-xl bg-zinc-50 border border-zinc-200 overflow-hidden text-xs">
+                <div className="px-4 py-3 border-b border-zinc-200 flex items-center justify-between">
+                  <span className="font-medium text-zinc-700">Struktura souboru</span>
+                  <button
+                    onClick={downloadTemplate}
+                    className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 transition-colors"
+                  >
+                    <DownloadSimple size={13} weight="bold" />
+                    Stáhnout šablonu (.csv)
+                  </button>
+                </div>
+                <div className="divide-y divide-zinc-100">
+                  {TEMPLATE_COLUMNS.map(({ col, required, desc, example }) => (
+                    <div key={col} className="px-4 py-2 flex items-center gap-3">
+                      <span className="font-mono text-zinc-800 w-20 shrink-0">
+                        {col}
+                        {required && <span className="text-red-400 ml-0.5">*</span>}
+                      </span>
+                      <span className="text-zinc-500 flex-1">{desc}</span>
+                      <span className="font-mono text-zinc-400 shrink-0 hidden sm:block">{example}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-4 py-3 border-t border-zinc-200 text-zinc-500">
+                  <span className="font-medium text-zinc-600">Platné hodnoty pro sloupec typ: </span>
+                  {CATEGORY_KEYS.map((k, i) => (
+                    <span key={k}>
+                      <span className="font-mono text-zinc-500">{k}</span>
+                      {i < CATEGORY_KEYS.length - 1 && <span className="text-zinc-300"> · </span>}
+                    </span>
+                  ))}
+                </div>
+                <div className="px-4 py-2.5 border-t border-zinc-100 bg-white text-zinc-400">
+                  * povinné pole · Existující produkty se stejným kódem budou aktualizovány.
                 </div>
               </div>
 
