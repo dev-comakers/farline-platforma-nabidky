@@ -72,9 +72,30 @@ prisma/schema.prisma     — схема БД
 | Репозиторій | Акаунт | Для чого |
 |-------------|--------|----------|
 | `github.com/rontoday/farline-platforma-nabidky` | rontoday (команда) | Основний dev репо |
-| `github.com/ecl1pseee55/farline-platforma-nabidky` | ecl1pseee55 (особистий) | Vercel auto-deploy |
+| `github.com/ecl1pseee55/farline-platforma-nabidky` | ecl1pseee55 (особистий) | Vercel auto-deploy (дзеркало) |
 
 Обидва репо синхронізовані, `main` однаковий.
+
+### Git-акаунти і токени
+
+**Platon (розробник) = акаунт `ecl1pseee55`** — через нього ведеться вся розробка. Він запрошений у `rontoday` як колаборатор і робить всі коміти/PR через цей акаунт.
+
+**Токени в `.env.local`:**
+- `GITHUB_TOKEN` — токен акаунту `ecl1pseee55` → використовується для пушу в `rontoday` (як колаборатор) і в `deploy` ремоут (форк ecl1pseee55)
+- `GITHUB_TOKEN1` — токен іншого акаунту (`dev-comakers`) → синхронізований дзеркальний репо, також підключений для деплою
+
+**Git ремоути локально:**
+```
+origin       → rontoday/farline-platforma-nabidky   (без токена в URL — через Keychain або треба додати GITHUB_TOKEN)
+deploy       → ecl1pseee55/farline-platforma-nabidky (GITHUB_TOKEN) → Vercel auto-deploy
+dev-comakers → dev-comakers/farline-platforma-nabidky (GITHUB_TOKEN1)
+```
+
+**Воркфлоу для нових змін:**
+1. Комітити локально
+2. `git push origin main` → rontoday (основний репо)
+3. `git push deploy main` → ecl1pseee55 → Vercel auto-deploy (для тестування)
+4. Після підтвердження на Vercel → деплой на Hetzner (Блок 12)
 
 ---
 

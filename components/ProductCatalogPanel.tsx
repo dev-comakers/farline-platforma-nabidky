@@ -32,7 +32,6 @@ export function ProductCatalogPanel({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return products
-      .filter((p) => p.currency === currency)
       .filter((p) => (brand ? p.brand === brand : true))
       .filter((p) =>
         q
@@ -41,7 +40,7 @@ export function ProductCatalogPanel({
             p.brand.toLowerCase().includes(q)
           : true
       );
-  }, [products, query, brand, currency]);
+  }, [products, query, brand]);
 
   if (!open) return null;
 
@@ -117,9 +116,7 @@ export function ProductCatalogPanel({
         <div className="flex-1 overflow-y-auto px-3 py-3">
           {filtered.length === 0 && (
             <div className="text-center text-sm text-zinc-500 py-12">
-              {currency === "USD"
-                ? "Žádné produkty v USD."
-                : "Žádné produkty odpovídající filtru."}
+              Žádné produkty odpovídající filtru.
             </div>
           )}
           {filtered.map((p) => (
