@@ -1,7 +1,7 @@
 # HANDOFF — Farline Nabídky
 
-**Дата:** 2026-05-27  
-**Стан:** Активна розробка. PR #8 змерджено (Блоки 0–11). Воркфлоу встановлено.
+**Дата оновлення:** 2026-05-27  
+**Стан:** Готово до здачі клієнту. Всі функції реалізовані, мобільна адаптація завершена, баги виправлені.
 
 ---
 
@@ -15,55 +15,44 @@
 
 ---
 
-## Що ЗРОБЛЕНО (Блоки 0–11)
+## Що ЗРОБЛЕНО
+
+### Блоки 0–13 (всі реалізовані)
 
 | Блок | Назва | Статус |
 |------|-------|--------|
-| 0 | Project baseline (ESLint, CI, .env.example, шрифти) | Частково — CI не налаштовано, але решта є |
-| 1 | БД + Prisma схема + seed | Готово (мігровано на Supabase) |
-| 2 | Auth JWT (login/logout, httpOnly cookie, ролі) | Готово |
+| 0 | Project baseline (ESLint, CI, шрифти, .env.example) | Готово |
+| 1 | БД + Prisma схема + seed | Готово (Supabase PostgreSQL) |
+| 2 | Auth JWT (login/logout, httpOnly cookie, ролі admin/manager) | Готово |
 | 3 | Замінили in-memory store на Prisma | Готово |
 | 4 | CRUD продуктів + завантаження фото | Готово |
-| 5 | Параметри категорій (admin «Nastavení → Kategorie») | Готово (крім модалки деталей продукту — Блок 5 partial) |
-| 7 | Share-посилання + публічна сторінка | Готово (`offerPublicSelect` без `internalNote`) |
-| 9 | Базовий PDF/Excel export | Готово (без НДС і hideCode — це Блок 9) |
-| 10 | Імпорт продуктів CSV/XLSX (preview + commit) | Готово |
+| 5 | Параметри категорій + модалка деталей продукту | Готово |
+| 6 | Статуси позицій (P/O/Z), DPH 21%, toggle DPH/hideCode, мульти-валюта | Готово |
+| 7 | Share-посилання + публічна сторінка `/nabidka/[shareId]` | Готово |
+| 8 | Коментарі архітектора → БД + email через Resend | Готово |
+| 9 | PDF/Excel export (з DPH і hideCode) | Готово |
+| 10 | Імпорт продуктів CSV/XLSX (preview → commit) | Готово |
 | 11 | Управління користувачами (admin: список, create, reset, delete) | Готово |
-| — | Пагінація API + security (offerPublicSelect) | Готово |
+| — | Мобільна адаптація 375px–1440px | Готово (PR #9–11) |
+| — | Pre-release QA (Playwright аудит + bug fixes) | Готово (PR #12–13) |
 
-### Ключові файли
+### Баги виправлені в останній сесії (PR #12–13)
 
-```
-app/(internal)/          — Filip: dashboard, список КП, каталог, конструктор
-app/nabidka/[id]/        — публічна сторінка архітектора (без sidebar, read-only)
-app/api/                 — Route Handlers (всі мутації тут)
-lib/calculations.ts      — грошова математика
-lib/pdf-export.ts        — PDF через jsPDF
-lib/excel-export.ts      — Excel через ExcelJS
-lib/import-parse.ts      — парсинг CSV/XLSX для імпорту
-components/OfferEditor.tsx   — конструктор КП (головний компонент)
-components/UserManager.tsx   — управління юзерами
-components/ImportModal.tsx   — 3-step імпорт
-prisma/schema.prisma     — схема БД
-```
+- **Rate limit:** рахував усі спроби логіну → тепер тільки невдалі (5 невдалих = блок 15 хв)
+- **Autosave:** не показував помилку при збої → заголовок показує «Chyba uložení» + toast
+- **Optimistic update rollback:** при помилці API — позиції КП відновлюються до попереднього стану
+- **Share modal:** відкривався навіть при помилці мережі → тепер тільки при успіху
+- **CurrencyToggle overflow:** кнопка EUR виходила за межі на mobile 375px
+- **Offer editor padding:** `px-6` на mobile замість `px-4` (як на інших сторінках)
 
 ---
 
-## Що НЕ ЗРОБЛЕНО
+## Що НЕ ЗРОБЛЕНО / Залишається
 
-| Блок | Назва | Пріоритет |
-|------|-------|-----------|
-| 6 | Статуси позицій (Potvrzeno/Objednáno/Získáno), НДС 21%, toggle DPH, hideCode, EUR | Високий |
-| 8 | Коментарі архітектора → збереження в БД + email через Resend | Високий |
-| 9 | PDF/Excel: додати НДС рядок, hideCode (залежить від Блоку 6) | Середній |
-| 5* | Модалка деталей продукту «09-produkt-detail-modal» (Figma node 1:1057) | Середній |
-| 12 | Docker + Caddy + Hetzner deploy | Після функцій |
-| 13 | Наповнення каталогу реальними прайсами постачальників | Залежить від клієнта |
-
-**Примітки:**
-- Блок 6 і 8 — критичні для реального використання (без них КП не можна відправити архітектору правильно і коментарі не зберігаються)
-- Блок 12 — потрібен для продакшен деплою на Hetzner (зараз тільки trial на Vercel)
-- Блок 13 — заблокований поки клієнт не дасть прайси постачальників
+| Задача | Пріоритет | Примітка |
+|--------|-----------|---------|
+| Docker + Caddy + Hetzner deploy | Після здачі клієнту | Зараз на Vercel (trial) |
+| Наповнення каталогу реальними прайсами | Залежить від клієнта | Імпорт CSV/XLSX вже готовий |
 
 ---
 
@@ -71,116 +60,115 @@ prisma/schema.prisma     — схема БД
 
 | Репозиторій | Акаунт | Для чого |
 |-------------|--------|----------|
-| `github.com/rontoday/farline-platforma-nabidky` | rontoday (команда) | Основний dev репо |
+| `github.com/rontoday/farline-platforma-nabidky` | rontoday | Основний dev репо |
 | `github.com/dev-comakers/farline-platforma-nabidky` | dev-comakers | Vercel auto-deploy (дзеркало) |
-| `github.com/ecl1pseee55/farline-platforma-nabidky` | ecl1pseee55 (особистий Platon) | Додатковий ремоут |
 
-### Git-акаунти і токени
+---
 
-**Розробник = акаунт `ecl1pseee55`** (особистий акаунт Platon) — запрошений у `rontoday` як колаборатор, веде основну розробку.
+## Git + Vercel — Правила роботи з двома токенами
 
-**Vercel підключений до акаунту `dev-comakers` (`dev@comakers.cz`)** — коміти мають бути підписані саме цим git user, інакше Vercel блокує деплой. Git config для цього репо вже налаштований правильно: `user.name=dev-comakers`, `user.email=dev@comakers.cz`.
+### Токени
 
-**Токени в `.env.local`:**
-- `GITHUB_TOKEN` — токен акаунту `ecl1pseee55` → пуш в `rontoday` (як колаборатор) і `deploy` ремоут
-- `GITHUB_TOKEN1` — токен акаунту `dev-comakers` → пуш в `dev-comakers` ремоут (Vercel)
+| Змінна в `.env.local` | Акаунт | Для чого |
+|-----------------------|--------|----------|
+| `GITHUB_TOKEN` | `ecl1pseee55` (Platon, колаборант у rontoday) | Push в `origin`, GitHub API для PR/merge |
+| `GITHUB_TOKEN1` | `dev-comakers` | Push в `dev-comakers` remote → Vercel |
 
-**Git ремоути локально:**
+### Git ремоути локально
+
 ```
-origin       → rontoday/farline-platforma-nabidky      (GITHUB_TOKEN, вшитий в URL)
+origin       → rontoday/farline-platforma-nabidky      (GITHUB_TOKEN)
+dev-comakers → dev-comakers/farline-platforma-nabidky  (GITHUB_TOKEN1) → Vercel
 deploy       → ecl1pseee55/farline-platforma-nabidky   (GITHUB_TOKEN)
-dev-comakers → dev-comakers/farline-platforma-nabidky  (GITHUB_TOKEN1) → Vercel auto-deploy
 ```
 
-**Воркфлоу для нових змін:**
-1. Комітити локально (git user: `dev-comakers / dev@comakers.cz` — вже налаштовано)
-2. `git push origin main:develop` → rontoday develop (основний репо)
-3. `git push dev-comakers main` → Vercel auto-deploy (для тестування)
-4. Після підтвердження на Vercel → деплой на Hetzner (Блок 12)
+### Git config (вже налаштований для цього репо)
+
+```bash
+git config user.name   # dev-comakers
+git config user.email  # dev@comakers.cz
+```
+
+### КРИТИЧНО: чому Vercel показує «ecl1pse» замість «dev-comakers»
+
+Vercel показує **автора git коміту**. Коли GitHub робить squash merge через PR — він підписує коміт від імені власника токена (`ecl1pseee55`). Тому squash-merged коміти не можна пушити напряму на Vercel.
+
+**Рішення:** на `dev-comakers/main` завжди пушити **локально створені** коміти (не GitHub squash merge).
+
+### Правильний воркфлоу для кожної зміни
+
+```
+1. Зробити зміни + commit локально (git user = dev-comakers)
+   git add <files>
+   git commit -m "feat/fix: опис"
+
+2. Cherry-pick на develop + push → origin
+   git checkout develop
+   git cherry-pick <hash>
+   git push origin develop
+
+3. Створити PR + змерджити через GitHub API (GITHUB_TOKEN)
+   curl -X POST → /pulls  (develop → main)
+   curl -X PUT  → /merge
+
+4. Підтягнути origin/main локально
+   git checkout main
+   git fetch origin && git reset --hard origin/main
+   # (не береш squash-merged коміт — ти вже маєш свій локальний)
+
+5. Push локального main на dev-comakers/main (GITHUB_TOKEN1)
+   git push "https://${GITHUB_TOKEN1}@github.com/dev-comakers/farline-platforma-nabidky.git" main --force
+```
+
+### Що НЕ робити
+
+- Не пушити GitHub squash-merge коміти на `dev-comakers` — будуть підписані ecl1pse
+- Не мерджити напряму в `origin/main` без PR
+- Не комітити в гілку `main` напряму — тільки через `develop` + PR
 
 ---
 
 ## Де живе деплой
 
-**URL:** `farline-platforma-nabidky-6s3w.vercel.app`  
+**Production URL:** `https://farline-platforma-nabidky.vercel.app`  
 **БД:** Supabase PostgreSQL (EU West, `aws-0-eu-west-1.pooler.supabase.com:5432`)  
 **Env vars:** налаштовані в Vercel dashboard
 
 ### Важливо про Supabase
-- Порт **5432** (session pooler) — для Prisma та міграцій
+
+- Порт **5432** (session pooler) — для Prisma та міграцій ✓
 - Порт 6543 (transaction pooler) — **НЕ підходить** для Prisma, зависає
 
----
+### Credentials
 
-## На чому ЗАСТРЯГЛИ зараз
-
-### Проблема: Vercel Hobby plan + git user
-
-**Вирішено:** git config налаштований на `dev-comakers / dev@comakers.cz` — саме цей акаунт зареєстрований на Vercel. Коміти проходять.
-
-**Попередня проблема (вирішена):** коміти були від `coMakers` (capital M), Vercel блокував — "Deployment Blocked, commit author did not have contributing access". Виправлено зміною git config.
-
-### Останній задеплоєний commit
-- `11d662d` — "fix: three UI bugs" — запушено в `dev-comakers main` → Vercel auto-deploy
-
-### Варіанти вирішення
-
-**Варіант A — Vercel CLI (рекомендований зараз):**
-```bash
-npm i -g vercel
-vercel login   # увійти як ecl1pseee55
-vercel --prod  # деплоїть з локального коду, без git author check
-```
-
-**Варіант B — змінити git config для цього репо:**
-```bash
-git config user.email "email-від-ecl1pseee55-акаунту"
-git config user.name "ecl1pseee55"
-```
-Тоді нові коміти проходитимуть Vercel автоматично.
-
-**Варіант C — довгострокове рішення (Блок 12):**
-Задеплоїти на Hetzner через Docker — тоді Vercel взагалі не потрібен, і обмежень по акаунтах немає.
-
----
-
-## Робочий процес (домовленість з командою)
-
-Це актуальний воркфлоу, узгоджений між Platon і Claude. Дотримуватись у кожній сесії.
-
-### Крок 1 — Розробка + push для перевірки на Vercel
-
-Після кожного фіксу або фічі Claude робить:
-```bash
-git push origin main:develop     # rontoday/develop — для PR-history
-git push dev-comakers main       # Vercel auto-deploy — щоб одразу бачити зміни
-```
-
-### Крок 2 — Перевірка на Vercel
-
-Platon перевіряє на `farline-platforma-nabidky-6s3w.vercel.app` що нічого не впало.
-
-### Крок 3 — PR + merge в main (тільки після підтвердження)
-
-Якщо все ок — Claude через GitHub API:
-1. Створює PR `develop → main` на rontoday з описом що зроблено
-2. Мерджить PR
-3. Пушить `origin main` щоб локальний main і remote були синхронізовані
-
-### Що НЕ робити
-- Не мерджити в main без перевірки на Vercel
-- Не пушити напряму в `origin main` в обхід PR
-- Не створювати PR вручну через GitHub UI — Claude робить це через API
-
----
-
-## Credentials (не комітити!)
-
-Всі реальні значення — в `.env.local` (gitignored) і у Vercel dashboard env vars.  
+Всі реальні значення — в `.env.local` (gitignored) і у Vercel dashboard.  
 Структура змінних — в `.env.example`.
 
 ---
 
-## Наступний крок
+## Ключові файли
 
-Продовжувати виправляти баги і доробляти відсутній функціонал (Блок 12 — Docker/Hetzner deploy).
+```
+app/(internal)/              — Filip: dashboard, список КП, каталог, конструктор
+app/nabidka/[id]/            — публічна сторінка архітектора (без sidebar, read-only)
+app/api/                     — Route Handlers (всі мутації)
+app/api/public/              — публічні ендпоінти (без auth, без internalNote)
+proxy.ts                     — Next.js 16 auth middleware (захист internal маршрутів)
+lib/calculations.ts          — грошова математика + VAT
+lib/pdf-export.ts            — PDF через jsPDF
+lib/excel-export.ts          — Excel через ExcelJS
+lib/rate-limit.ts            — rate limit (checkRateLimit = spam, checkOnly+recordFailure = login)
+components/OfferEditor.tsx   — конструктор КП (головний компонент, autosave, items)
+components/NabidkaPublic.tsx — публічна сторінка КП
+components/MobileLayout.tsx  — mobile sidebar drawer
+prisma/schema.prisma         — схема БД
+audit.cjs                    — Playwright скрипт для pre-release QA
+```
+
+---
+
+## Наступні кроки
+
+1. **Здача клієнту** — демо на `https://farline-platforma-nabidky.vercel.app`
+2. **Наповнення каталогу** — Filip завантажує реальні прайси через імпорт CSV/XLSX
+3. **Hetzner deploy** — Docker + Caddy + перенос БД після затвердження клієнтом
