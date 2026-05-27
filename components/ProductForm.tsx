@@ -123,6 +123,8 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
         if (imgRes.ok) {
           const imgData = await imgRes.json();
           savedProduct = { ...savedProduct, imageUrl: imgData.imagePath ? `/api/uploads/${imgData.imagePath}` : null };
+        } else {
+          push("Foto se nepodařilo uložit (produkt byl uložen bez fotografie)", "info");
         }
       }
 

@@ -10,15 +10,20 @@ import {
 import { prisma } from "@/lib/db/prisma";
 import { MetricCard } from "@/components/MetricCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatCurrency, formatRelative } from "@/lib/calculations";
+import { formatCurrency, formatRelative, formatDateTime } from "@/lib/calculations";
 import { offerListSelect, mapOffer, commentSelect, mapComment, snapshotProducts } from "@/lib/db/selects";
 import { offerSummary } from "@/lib/calculations";
 import { CreateOfferButton } from "@/components/CreateOfferButton";
 import type { Prisma } from "@prisma/client";
 
-type DbOffer = Prisma.OfferGetPayload<{ select: typeof offerListSelect }>;
+const extendedOfferSelect = {
+  ...offerListSelect,
+  createdBy: { select: { name: true } },
+} satisfies Prisma.OfferSelect;
 
-function offerTotal(dbOffer: DbOffer): number {
+type DbOfferEx = Prisma.OfferGetPayload<{ select: typeof extendedOfferSelect }>;
+
+function offerTotal(dbOffer: DbOfferEx): number {
   const offer = mapOffer(dbOffer);
   const products = snapshotProducts(dbOffer.items);
   return offerSummary(offer, products).totalAfterDiscount;
@@ -27,7 +32,7 @@ function offerTotal(dbOffer: DbOffer): number {
 export default async function DashboardPage() {
   const [dbOffers, dbComments] = await Promise.all([
     prisma.offer.findMany({
-      select: offerListSelect,
+      select: extendedOfferSelect,
       orderBy: { updatedAt: "desc" },
     }),
     prisma.comment.findMany({
@@ -58,17 +63,19 @@ export default async function DashboardPage() {
         icon: ChatCircleDots,
         title: `Nový komentář od ${c.authorName}`,
         meta: offer?.name ?? "—",
+        author: null as string | null,
         href: `/nabidky/${c.offerId}`,
       };
     }),
-    ...offers
+    ...dbOffers
       .filter((o) => o.status === "odeslana" || o.status === "okomentovana")
       .map((o) => ({
         id: `o-${o.id}`,
-        when: o.updatedAt,
+        when: o.updatedAt.toISOString(),
         icon: PaperPlaneTilt,
         title: `Nabídka odeslána`,
         meta: o.name,
+        author: o.createdBy?.name ?? null,
         href: `/nabidky/${o.id}`,
       })),
   ]
@@ -192,6 +199,8 @@ export default async function DashboardPage() {
                       <div className="text-xs text-zinc-500 truncate">{a.meta}</div>
                       <div className="text-[11px] text-zinc-400 mt-1">
                         {formatRelative(a.when)}
+                        <span className="text-zinc-300"> ({formatDateTime(a.when)})</span>
+                        {a.author && <span className="text-zinc-400"> · {a.author}</span>}
                       </div>
                     </div>
                   </div>

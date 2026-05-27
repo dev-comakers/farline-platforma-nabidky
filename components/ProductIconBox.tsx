@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { productIcon } from "@/lib/productIcons";
 import type { ProductType } from "@/lib/types";
 
@@ -10,7 +13,8 @@ export function ProductIconBox({
   size?: "xs" | "sm" | "md" | "lg";
   imageUrl?: string | null;
 }) {
-  const Icon = productIcon[type];
+  const [imgError, setImgError] = useState(false);
+  const Icon = productIcon[type] ?? productIcon["ostatni"];
   const dims = {
     xs: { box: "w-9 h-9 rounded-md", icon: 16 },
     sm: { box: "w-11 h-11 rounded-lg", icon: 20 },
@@ -18,17 +22,16 @@ export function ProductIconBox({
     lg: { box: "w-full aspect-[4/3] rounded-2xl", icon: 48 },
   }[size];
 
-  if (imageUrl) {
+  if (imageUrl && !imgError) {
     return (
-      <div
-        className={`${dims.box} overflow-hidden bg-zinc-100 shrink-0 relative`}
-      >
+      <div className={`${dims.box} overflow-hidden bg-zinc-100 shrink-0 relative`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageUrl}
           alt=""
           className="w-full h-full object-cover"
           loading="lazy"
+          onError={() => setImgError(true)}
         />
       </div>
     );

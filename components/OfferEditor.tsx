@@ -115,7 +115,15 @@ export function OfferEditor({
 
   const handleDelete = async () => {
     const res = await fetch(`/api/offers/${offer.id}`, { method: "DELETE" });
-    if (res.ok) router.push("/nabidky");
+    if (res.ok) {
+      router.push("/nabidky");
+    } else if (res.status === 403) {
+      push("Smazat nabídku může pouze admin", "info");
+      setShowDeleteConfirm(false);
+    } else {
+      push("Chyba při mazání nabídky", "info");
+      setShowDeleteConfirm(false);
+    }
   };
 
   const handleAddItem = async (productId: string) => {

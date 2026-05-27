@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { House, FileText, Package, Gear, Users } from "@phosphor-icons/react/dist/ssr";
 import type { PhosphorIcon } from "@/lib/productIcons";
+import { useMobileSidebar } from "./MobileSidebarContext";
 
 interface NavItem {
   href: string;
@@ -48,6 +49,7 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { close: closeMobileSidebar } = useMobileSidebar();
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -86,6 +88,7 @@ export function Sidebar({
             <Link
               key={href}
               href={href}
+              onClick={closeMobileSidebar}
               className={`group relative flex items-center gap-3 px-4 py-2.5 my-0.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-zinc-50 text-zinc-900"
@@ -127,6 +130,7 @@ export function Sidebar({
                 <Link
                   key={href}
                   href={href}
+                  onClick={closeMobileSidebar}
                   className={`group relative flex items-center gap-3 px-4 py-2.5 my-0.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-zinc-50 text-zinc-900"

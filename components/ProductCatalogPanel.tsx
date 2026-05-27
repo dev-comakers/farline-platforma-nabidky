@@ -50,7 +50,7 @@ export function ProductCatalogPanel({
         className="fixed inset-0 bg-zinc-900/20 z-40"
         onClick={onClose}
       />
-      <aside className="fixed right-0 top-0 bottom-0 w-[480px] bg-white border-l border-zinc-200 z-50 flex flex-col animate-slide-in-right shadow-2xl">
+      <aside className="fixed right-0 top-0 bottom-0 w-full sm:w-[480px] bg-white border-l border-zinc-200 z-50 flex flex-col animate-slide-in-right shadow-2xl">
         <header className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between">
           <div>
             <div className="text-xs uppercase tracking-[0.2em] text-zinc-400 mb-1">
