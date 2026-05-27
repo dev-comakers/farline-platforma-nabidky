@@ -1,7 +1,5 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -65,6 +63,7 @@ export async function sendCommentNotification({
 </body>
 </html>`;
 
+  const resend = new Resend(process.env.RESEND_API_KEY);
   await resend.emails.send({
     from,
     to,

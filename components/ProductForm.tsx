@@ -14,6 +14,17 @@ interface ProductFormProps {
 
 const inputCls = "mt-1 w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400";
 
+const FIELD_PLACEHOLDERS: Record<string, string> = {
+  rozmery: "š × v × h cm (např. 350 × 500 × 120)",
+  material: "např. mosaz, nerez, keramika",
+  povrch: "např. chrom, matná černá",
+  pripojeni: "např. 1/2\"",
+  zaruka: "roky (např. 2)",
+  prutok: "l/min (např. 6.5)",
+  objem: "litry (např. 190)",
+  hmotnost: "kg (např. 45)",
+};
+
 export function ProductForm({ open, onClose, product, onSaved }: ProductFormProps) {
   const { push } = useToast();
   const [categories, setCategories] = useState<ProductCategory[]>([]);
@@ -50,7 +61,7 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
       setCurrency(product.currency);
       setParams(product.parameters ?? {});
       setImageFile(null);
-      setImagePreview(null);
+      setImagePreview(product.imageUrl ?? null);
     } else {
       setCode(""); setName(""); setBrand(""); setDecor("");
       setCategoryId(""); setUnitPrice(""); setCurrency("CZK"); setParams({});
@@ -105,7 +116,7 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
 
       let savedProduct: Product = data.product;
 
-      if (imageFile && !product) {
+      if (imageFile) {
         const fd = new FormData();
         fd.append("image", imageFile);
         const imgRes = await fetch(`/api/products/${savedProduct.id}/photo`, { method: "POST", body: fd });
@@ -138,47 +149,45 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
         </header>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 overflow-y-auto">
-          {!product && (
-            <div>
-              <span className="text-xs text-zinc-500 uppercase tracking-wider">Fotografie</span>
-              <div
-                className="mt-1 relative w-full h-32 rounded-xl border-2 border-dashed border-zinc-200 hover:border-zinc-300 flex items-center justify-center cursor-pointer overflow-hidden bg-zinc-50 transition-colors"
-                onClick={() => imageInputRef.current?.click()}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const f = e.dataTransfer.files[0];
-                  if (f) handleImageChange(f);
-                }}
-              >
-                {imagePreview ? (
-                  <>
-                    <img src={imagePreview} alt="preview" className="w-full h-full object-contain" />
-                    <div className="absolute inset-0 bg-zinc-900/0 hover:bg-zinc-900/20 transition-colors flex items-center justify-center">
-                      <span className="opacity-0 hover:opacity-100 text-xs text-white font-medium bg-zinc-900/60 px-2 py-1 rounded-full transition-opacity">Změnit</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center">
-                    <Camera size={24} className="mx-auto mb-1 text-zinc-400" weight="duotone" />
-                    <span className="text-xs text-zinc-500">Nahrát fotografii</span>
-                    <span className="block text-[10px] text-zinc-400 mt-0.5">nebo přetáhněte soubor sem</span>
+          <div>
+            <span className="text-xs text-zinc-500 uppercase tracking-wider">Fotografie</span>
+            <div
+              className="mt-1 relative w-full h-32 rounded-xl border-2 border-dashed border-zinc-200 hover:border-zinc-300 flex items-center justify-center cursor-pointer overflow-hidden bg-zinc-50 transition-colors"
+              onClick={() => imageInputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const f = e.dataTransfer.files[0];
+                if (f) handleImageChange(f);
+              }}
+            >
+              {imagePreview ? (
+                <>
+                  <img src={imagePreview} alt="preview" className="w-full h-full object-contain" />
+                  <div className="absolute inset-0 bg-zinc-900/0 hover:bg-zinc-900/20 transition-colors flex items-center justify-center">
+                    <span className="opacity-0 hover:opacity-100 text-xs text-white font-medium bg-zinc-900/60 px-2 py-1 rounded-full transition-opacity">Změnit</span>
                   </div>
-                )}
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handleImageChange(f);
-                    e.target.value = "";
-                  }}
-                />
-              </div>
+                </>
+              ) : (
+                <div className="text-center">
+                  <Camera size={24} className="mx-auto mb-1 text-zinc-400" weight="duotone" />
+                  <span className="text-xs text-zinc-500">Nahrát fotografii</span>
+                  <span className="block text-[10px] text-zinc-400 mt-0.5">nebo přetáhněte soubor sem</span>
+                </div>
+              )}
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImageChange(f);
+                  e.target.value = "";
+                }}
+              />
             </div>
-          )}
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
@@ -250,6 +259,7 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
                     ) : (
                       <input
                         type={f.type === "number" ? "number" : "text"}
+                        placeholder={FIELD_PLACEHOLDERS[f.key] ?? ""}
                         value={params[f.key] ?? ""}
                         onChange={(e) => setParams((p) => ({ ...p, [f.key]: e.target.value }))}
                         className={inputCls + (f.type === "number" ? " font-mono tabular-nums" : "")}
