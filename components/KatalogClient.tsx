@@ -244,14 +244,14 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
               </span>
               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
                 <button
-                  onClick={() => { setEditProduct(p); setFormOpen(true); }}
+                  onClick={(e) => { e.stopPropagation(); setEditProduct(p); setFormOpen(true); }}
                   className="p-1.5 rounded-lg border border-zinc-200 text-zinc-500 hover:text-zinc-900"
                   title="Upravit"
                 >
                   <PencilSimple size={12} />
                 </button>
                 <button
-                  onClick={() => handleDelete(p)}
+                  onClick={(e) => { e.stopPropagation(); handleDelete(p); }}
                   className="p-1.5 rounded-lg border border-zinc-200 text-red-400 hover:text-red-600"
                   title="Smazat"
                 >

@@ -186,7 +186,7 @@ export function NabidkaPublic({
 
         <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
           <p className="text-xs text-zinc-500">
-            Ceny jsou bez DPH. Platnost nabídky 30 dní.
+            {offer.showVat ? "Ceny jsou uvedeny s DPH." : "Ceny jsou bez DPH."} Platnost nabídky 30 dní.
           </p>
           <div className="flex gap-2">
             <button
