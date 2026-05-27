@@ -44,11 +44,13 @@ export function OfferEditor({
   snapshotProducts,
   allProducts,
   initialComments,
+  userRole = "manager",
 }: {
   initialOffer: Offer;
   snapshotProducts: Product[];
   allProducts: Product[];
   initialComments: Comment[];
+  userRole?: "admin" | "manager";
 }) {
   const router = useRouter();
   const { push } = useToast();
@@ -538,32 +540,36 @@ export function OfferEditor({
           />
         </div>
 
-        <hr className="my-5 border-zinc-200/60" />
-        {showDeleteConfirm ? (
-          <div className="space-y-2">
-            <p className="text-xs text-zinc-600">Opravdu smazat?</p>
-            <div className="flex gap-2">
+        {userRole === "admin" && (
+          <>
+            <hr className="my-5 border-zinc-200/60" />
+            {showDeleteConfirm ? (
+              <div className="space-y-2">
+                <p className="text-xs text-zinc-600">Opravdu smazat?</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDelete}
+                    className="flex-1 btn-tactile px-3 py-2 rounded-lg text-xs font-medium bg-red-500 text-white"
+                  >
+                    Ano, smazat
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 btn-tactile px-3 py-2 rounded-lg text-xs font-medium border border-zinc-200 text-zinc-700"
+                  >
+                    Zrušit
+                  </button>
+                </div>
+              </div>
+            ) : (
               <button
-                onClick={handleDelete}
-                className="flex-1 btn-tactile px-3 py-2 rounded-lg text-xs font-medium bg-red-500 text-white"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full text-xs text-red-500 hover:text-red-700 py-2"
               >
-                Ano, smazat
+                Smazat nabídku
               </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 btn-tactile px-3 py-2 rounded-lg text-xs font-medium border border-zinc-200 text-zinc-700"
-              >
-                Zrušit
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="w-full text-xs text-red-500 hover:text-red-700 py-2"
-          >
-            Smazat nabídku
-          </button>
+            )}
+          </>
         )}
       </aside>
 
