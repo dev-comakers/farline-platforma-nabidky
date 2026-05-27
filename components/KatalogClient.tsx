@@ -17,7 +17,8 @@ import { ProductForm } from "@/components/ProductForm";
 import { ProductDetailModal } from "@/components/ProductDetailModal";
 import { PRODUCT_TYPE_LABEL, type CategoryField, type ProductCategory, type ProductType, type Product } from "@/lib/types";
 import { ProductIconBox } from "@/components/ProductIconBox";
-import { formatCurrency } from "@/lib/calculations";
+import { formatCurrency, normalizeText } from "@/lib/calculations";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useToast } from "@/components/Toast";
 
 export function KatalogClient({ initialProducts }: { initialProducts: Product[] }) {
@@ -33,6 +34,7 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
   const [formOpen, setFormOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | undefined>(undefined);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Product | null>(null);
 
   useEffect(() => {
     fetch("/api/categories")
@@ -57,16 +59,16 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
   );
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalizeText(query.trim());
     return products
       .filter((p) => (brand ? p.brand === brand : true))
       .filter((p) => (type ? p.type === type : true))
       .filter((p) =>
         q
-          ? p.code.toLowerCase().includes(q) ||
-            p.name.toLowerCase().includes(q) ||
-            p.brand.toLowerCase().includes(q) ||
-            p.decor.toLowerCase().includes(q)
+          ? normalizeText(p.code).includes(q) ||
+            normalizeText(p.name).includes(q) ||
+            normalizeText(p.brand).includes(q) ||
+            normalizeText(p.decor).includes(q)
           : true
       );
   }, [products, query, brand, type]);
@@ -84,7 +86,6 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
   };
 
   const handleDelete = async (product: Product) => {
-    if (!confirm(`Smazat produkt „${product.name}"?`)) return;
     const res = await fetch(`/api/products/${product.id}`, { method: "DELETE" });
     if (res.ok) {
       setProducts((prev) => prev.filter((p) => p.id !== product.id));
@@ -208,7 +209,7 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
                   <PencilSimple size={12} />
                 </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); handleDelete(p); }}
+                  onClick={(e) => { e.stopPropagation(); setConfirmDelete(p); }}
                   className="p-1.5 bg-white rounded-lg border border-zinc-200 shadow-sm text-red-500 hover:text-red-700"
                   title="Smazat"
                 >
@@ -251,7 +252,7 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
                   <PencilSimple size={12} />
                 </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); handleDelete(p); }}
+                  onClick={(e) => { e.stopPropagation(); setConfirmDelete(p); }}
                   className="p-1.5 rounded-lg border border-zinc-200 text-red-400 hover:text-red-600"
                   title="Smazat"
                 >
@@ -278,6 +279,18 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
           allowUpload
         />
       )}
+      <ConfirmDialog
+        open={confirmDelete !== null}
+        title="Smazat produkt"
+        message={`Opravdu chcete smazat produkt „${confirmDelete?.name}"? Tato akce je nevratná.`}
+        confirmLabel="Smazat"
+        destructive
+        onConfirm={async () => {
+          if (confirmDelete) await handleDelete(confirmDelete);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { MagnifyingGlass, X, Plus } from "@phosphor-icons/react/dist/ssr";
 import type { Product, Currency } from "@/lib/types";
-import { formatCurrency } from "@/lib/calculations";
+import { formatCurrency, normalizeText } from "@/lib/calculations";
 import { ProductIconBox } from "./ProductIconBox";
 import { ProductDetailModal } from "./ProductDetailModal";
 
@@ -30,14 +30,14 @@ export function ProductCatalogPanel({
   );
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalizeText(query.trim());
     return products
       .filter((p) => (brand ? p.brand === brand : true))
       .filter((p) =>
         q
-          ? p.code.toLowerCase().includes(q) ||
-            p.name.toLowerCase().includes(q) ||
-            p.brand.toLowerCase().includes(q)
+          ? normalizeText(p.code).includes(q) ||
+            normalizeText(p.name).includes(q) ||
+            normalizeText(p.brand).includes(q)
           : true
       );
   }, [products, query, brand]);

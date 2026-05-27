@@ -12,6 +12,7 @@ import {
   offerSummary,
   itemTotalAfterDiscount,
   itemTotalBeforeDiscount,
+  convertCurrency,
   formatCurrency,
   formatDateTime,
   formatDate,
@@ -137,6 +138,9 @@ export function NabidkaPublic({
                 if (!p) return null;
                 const before = itemTotalBeforeDiscount(item, p);
                 const after = itemTotalAfterDiscount(item, p);
+                const afterDisplay = convertCurrency(after, p.currency, offer.currency);
+                const beforeDisplay = convertCurrency(before, p.currency, offer.currency);
+                const unitPriceDisplay = convertCurrency(p.unitPrice, p.currency, offer.currency);
                 return (
                   <tr
                     key={item.id}
@@ -160,18 +164,18 @@ export function NabidkaPublic({
                     </td>
                     <td className="px-2 py-4 text-center font-mono tabular-nums text-sm">{item.quantity}</td>
                     <td className="px-2 py-4 text-right font-mono tabular-nums text-zinc-700 text-xs">
-                      {formatCurrency(p.unitPrice, p.currency)}
+                      {formatCurrency(unitPriceDisplay, offer.currency)}
                     </td>
                     <td className="px-2 py-4 text-center font-mono tabular-nums text-sm">
                       {item.discountPercent.toFixed(0)} %
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="font-mono tabular-nums text-sm font-medium text-zinc-900">
-                        {formatCurrency(after, p.currency)}
+                        {formatCurrency(afterDisplay, offer.currency)}
                       </div>
                       {item.discountPercent > 0 && (
                         <div className="font-mono tabular-nums text-[10px] text-zinc-400 line-through">
-                          {formatCurrency(before, p.currency)}
+                          {formatCurrency(beforeDisplay, offer.currency)}
                         </div>
                       )}
                     </td>

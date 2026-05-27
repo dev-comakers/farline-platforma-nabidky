@@ -2,6 +2,21 @@ import type { Currency, Offer, OfferItem, OfferSummary, Product } from "./types"
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
+export function normalizeText(s: string): string {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+const EXCHANGE_RATES: Record<Currency, Record<Currency, number>> = {
+  CZK: { CZK: 1,     USD: 0.043, EUR: 0.040 },
+  USD: { CZK: 23.3,  USD: 1,     EUR: 0.92  },
+  EUR: { CZK: 25.0,  USD: 1.09,  EUR: 1     },
+};
+
+export function convertCurrency(amount: number, from: Currency, to: Currency): number {
+  if (from === to) return amount;
+  return round2(amount * (EXCHANGE_RATES[from]?.[to] ?? 1));
+}
+
 export function itemTotalBeforeDiscount(item: OfferItem, product: Product): number {
   return round2(product.unitPrice * item.quantity);
 }
@@ -21,8 +36,10 @@ export function offerSummary(offer: Offer, products: Product[]): OfferSummary {
   for (const item of offer.items) {
     const product = byId.get(item.productId);
     if (!product) continue;
-    totalBeforeDiscount += itemTotalBeforeDiscount(item, product);
-    totalDiscount += itemDiscountAmount(item, product);
+    const before = itemTotalBeforeDiscount(item, product);
+    const discount = itemDiscountAmount(item, product);
+    totalBeforeDiscount += convertCurrency(before, product.currency, offer.currency);
+    totalDiscount += convertCurrency(discount, product.currency, offer.currency);
   }
   totalBeforeDiscount = round2(totalBeforeDiscount);
   totalDiscount = round2(totalDiscount);

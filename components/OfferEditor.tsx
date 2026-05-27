@@ -14,11 +14,13 @@ import {
   CheckCircle,
   Eye,
   EyeSlash,
+  PencilSimple,
 } from "@phosphor-icons/react/dist/ssr";
 import {
   offerSummary,
   itemTotalAfterDiscount,
   itemTotalBeforeDiscount,
+  convertCurrency,
   formatCurrency,
   formatDateTime,
   formatRelative,
@@ -196,12 +198,18 @@ export function OfferEditor({
               Upraveno {formatRelative(offer.updatedAt)}
             </span>
           </div>
-          <input
-            value={offer.name}
-            onChange={(e) => updateField("name", e.target.value)}
-            className="block w-full bg-transparent text-4xl font-semibold tracking-tight text-zinc-900 focus:outline-none border-b border-transparent focus:border-zinc-200 py-1"
-            style={{ fontFamily: "var(--font-display)" }}
-          />
+          <div className="relative group/name">
+            <input
+              value={offer.name}
+              onChange={(e) => updateField("name", e.target.value)}
+              className="block w-full bg-transparent text-4xl font-semibold tracking-tight text-zinc-900 focus:outline-none border-b border-zinc-200/50 hover:border-zinc-300 focus:border-zinc-300 py-1 pr-8 transition-colors"
+              style={{ fontFamily: "var(--font-display)" }}
+            />
+            <PencilSimple
+              size={15}
+              className="absolute right-1 top-1/2 -translate-y-1/2 text-zinc-400 opacity-0 group-hover/name:opacity-100 focus-within:opacity-100 transition-opacity pointer-events-none"
+            />
+          </div>
           <div className="mt-3 flex items-center gap-2 text-sm text-zinc-500">
             <span>Architekt:</span>
             <input
@@ -257,8 +265,9 @@ export function OfferEditor({
                 {offer.items.map((item) => {
                   const product = productsById.get(item.productId);
                   if (!product) return null;
-                  const totalBefore = itemTotalBeforeDiscount(item, product);
-                  const totalAfter = itemTotalAfterDiscount(item, product);
+                  const totalBefore = convertCurrency(itemTotalBeforeDiscount(item, product), product.currency, offer.currency);
+                  const totalAfter = convertCurrency(itemTotalAfterDiscount(item, product), product.currency, offer.currency);
+                  const unitPriceConverted = convertCurrency(product.unitPrice, product.currency, offer.currency);
                   return (
                     <tr
                       key={item.id}
@@ -305,7 +314,7 @@ export function OfferEditor({
                         />
                       </td>
                       <td className="px-2 py-3 text-right font-mono tabular-nums text-zinc-700 text-xs">
-                        {formatCurrency(product.unitPrice, product.currency)}
+                        {formatCurrency(unitPriceConverted, offer.currency)}
                       </td>
                       <td className="px-2 py-3 text-center">
                         <DiscountInput
@@ -315,11 +324,11 @@ export function OfferEditor({
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="font-mono tabular-nums text-sm font-medium text-zinc-900">
-                          {formatCurrency(totalAfter, product.currency)}
+                          {formatCurrency(totalAfter, offer.currency)}
                         </div>
                         {item.discountPercent > 0 && (
                           <div className="font-mono tabular-nums text-[10px] text-zinc-400 line-through">
-                            {formatCurrency(totalBefore, product.currency)}
+                            {formatCurrency(totalBefore, offer.currency)}
                           </div>
                         )}
                       </td>
@@ -667,14 +676,15 @@ function ToggleRow({
       <Icon size={15} />
       <span className="flex-1 text-left">{label}</span>
       <span
-        className={`w-8 h-4 rounded-full transition-colors relative shrink-0 ${
-          checked ? "bg-emerald-500" : "bg-zinc-300"
-        }`}
+        className="w-10 h-5 rounded-full shrink-0 flex items-center px-0.5 transition-colors duration-200"
+        style={{ backgroundColor: checked ? "#10b981" : "#d4d4d8" }}
       >
         <span
-          className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-transform ${
-            checked ? "translate-x-4" : "translate-x-0.5"
-          }`}
+          className="w-4 h-4 rounded-full bg-white transition-all duration-200"
+          style={{
+            boxShadow: "0 1px 2px rgba(0,0,0,0.18)",
+            marginLeft: checked ? "20px" : "0px",
+          }}
         />
       </span>
     </button>
