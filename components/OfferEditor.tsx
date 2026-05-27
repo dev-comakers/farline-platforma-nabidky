@@ -194,7 +194,7 @@ export function OfferEditor({
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-0 min-h-screen">
-      <div className="px-6 xl:px-10 py-8 min-w-0 overflow-x-hidden">
+      <div className="px-4 sm:px-6 xl:px-10 py-6 xl:py-8 min-w-0 overflow-x-hidden">
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => router.push("/nabidky")}
@@ -243,7 +243,7 @@ export function OfferEditor({
           </div>
         </header>
 
-        <section className="bg-white border border-zinc-200/70 rounded-2xl overflow-hidden mb-6 overflow-x-auto">
+        <section className="bg-white border border-zinc-200/70 rounded-2xl overflow-hidden overflow-x-auto mb-6">
           <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
             <h2
               className="text-base font-semibold text-zinc-900"
@@ -586,7 +586,7 @@ export function OfferEditor({
 
 function CurrencyToggle({ value, onChange }: { value: Currency; onChange: (c: Currency) => void }) {
   return (
-    <div className="ml-auto flex bg-zinc-100 rounded-md p-0.5 text-[11px] font-medium">
+    <div className="shrink-0 flex bg-zinc-100 rounded-md p-0.5 text-[11px] font-medium">
       {(["CZK", "USD", "EUR"] as const).map((c) => (
         <button
           key={c}
