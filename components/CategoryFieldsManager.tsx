@@ -24,6 +24,7 @@ function FieldRow({
 }) {
   const { push } = useToast();
   const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [label, setLabel] = useState(field.label);
   const [type, setType] = useState<FieldType>(field.type);
   const [options, setOptions] = useState(field.options.join(", "));
@@ -53,12 +54,12 @@ function FieldRow({
   };
 
   const remove = async () => {
-    if (!confirm(`Smazat pole "${field.label}"?`)) return;
     const res = await fetch(`/api/categories/${categoryId}/fields/${field.id}`, { method: "DELETE" });
     if (res.ok) {
       onDeleted(field.id);
       push("Pole smazáno");
     }
+    setConfirmDelete(false);
   };
 
   if (editing) {
@@ -113,9 +114,27 @@ function FieldRow({
       <button onClick={() => setEditing(true)} className="p-1.5 rounded-md hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700">
         <PencilSimple size={14} />
       </button>
-      <button onClick={remove} className="p-1.5 rounded-md hover:bg-red-50 text-zinc-400 hover:text-red-600">
-        <Trash size={14} />
-      </button>
+      {confirmDelete ? (
+        <div className="flex items-center gap-1.5 ml-1">
+          <span className="text-xs text-zinc-500">Smazat?</span>
+          <button
+            onClick={remove}
+            className="px-2 py-1 text-xs font-medium rounded-md bg-red-600 text-white hover:bg-red-700"
+          >
+            Ano
+          </button>
+          <button
+            onClick={() => setConfirmDelete(false)}
+            className="px-2 py-1 text-xs rounded-md text-zinc-600 hover:bg-zinc-100"
+          >
+            Ne
+          </button>
+        </div>
+      ) : (
+        <button onClick={() => setConfirmDelete(true)} className="p-1.5 rounded-md hover:bg-red-50 text-zinc-400 hover:text-red-600">
+          <Trash size={14} />
+        </button>
+      )}
     </div>
   );
 }

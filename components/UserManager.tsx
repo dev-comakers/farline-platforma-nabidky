@@ -163,18 +163,19 @@ export function UserManager({ initialUsers, currentUserId }: UserManagerProps) {
   const [showCreate, setShowCreate] = useState(false);
   const [resetUser, setResetUser] = useState<AppUser | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const handleDelete = async (user: AppUser) => {
-    if (!confirm(`Smazat uživatele ${user.name}? Tato akce je nevratná.`)) return;
-    setDeleting(user.id);
+  const handleDelete = async (userId: string) => {
+    setDeleting(userId);
+    setConfirmDeleteId(null);
     try {
-      const res = await fetch(`/api/users/${user.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/users/${userId}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
         push(data.error?.message ?? "Chyba při mazání", "info");
         return;
       }
-      setUsers((prev) => prev.filter((u) => u.id !== user.id));
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
       push("Uživatel smazán");
     } catch {
       push("Chyba při mazání", "info");
@@ -240,14 +241,33 @@ export function UserManager({ initialUsers, currentUserId }: UserManagerProps) {
                       <Key size={15} />
                     </button>
                     {user.id !== currentUserId && (
-                      <button
-                        onClick={() => handleDelete(user)}
-                        disabled={deleting === user.id}
-                        className="p-1.5 rounded-lg hover:bg-red-50 text-zinc-400 hover:text-red-600 disabled:opacity-40"
-                        title="Smazat uživatele"
-                      >
-                        <Trash size={15} />
-                      </button>
+                      confirmDeleteId === user.id ? (
+                        <div className="flex items-center gap-1.5 ml-1">
+                          <span className="text-xs text-zinc-500">Smazat?</span>
+                          <button
+                            onClick={() => handleDelete(user.id)}
+                            disabled={deleting === user.id}
+                            className="px-2 py-1 text-xs font-medium rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-40"
+                          >
+                            Ano
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="px-2 py-1 text-xs rounded-md text-zinc-600 hover:bg-zinc-100"
+                          >
+                            Ne
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteId(user.id)}
+                          disabled={deleting === user.id}
+                          className="p-1.5 rounded-lg hover:bg-red-50 text-zinc-400 hover:text-red-600 disabled:opacity-40"
+                          title="Smazat uživatele"
+                        >
+                          <Trash size={15} />
+                        </button>
+                      )
                     )}
                   </div>
                 </td>
