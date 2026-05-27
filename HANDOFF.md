@@ -1,7 +1,7 @@
 # HANDOFF — Farline Nabídky
 
-**Дата:** 2026-05-26  
-**Стан:** Trial deploy на Vercel, застрягли на Vercel Hobby plan обмеженнях
+**Дата:** 2026-05-27  
+**Стан:** Активна розробка. PR #8 змерджено (Блоки 0–11). Воркфлоу встановлено.
 
 ---
 
@@ -72,29 +72,30 @@ prisma/schema.prisma     — схема БД
 | Репозиторій | Акаунт | Для чого |
 |-------------|--------|----------|
 | `github.com/rontoday/farline-platforma-nabidky` | rontoday (команда) | Основний dev репо |
-| `github.com/ecl1pseee55/farline-platforma-nabidky` | ecl1pseee55 (особистий) | Vercel auto-deploy (дзеркало) |
-
-Обидва репо синхронізовані, `main` однаковий.
+| `github.com/dev-comakers/farline-platforma-nabidky` | dev-comakers | Vercel auto-deploy (дзеркало) |
+| `github.com/ecl1pseee55/farline-platforma-nabidky` | ecl1pseee55 (особистий Platon) | Додатковий ремоут |
 
 ### Git-акаунти і токени
 
-**Platon (розробник) = акаунт `ecl1pseee55`** — через нього ведеться вся розробка. Він запрошений у `rontoday` як колаборатор і робить всі коміти/PR через цей акаунт.
+**Розробник = акаунт `ecl1pseee55`** (особистий акаунт Platon) — запрошений у `rontoday` як колаборатор, веде основну розробку.
+
+**Vercel підключений до акаунту `dev-comakers` (`dev@comakers.cz`)** — коміти мають бути підписані саме цим git user, інакше Vercel блокує деплой. Git config для цього репо вже налаштований правильно: `user.name=dev-comakers`, `user.email=dev@comakers.cz`.
 
 **Токени в `.env.local`:**
-- `GITHUB_TOKEN` — токен акаунту `ecl1pseee55` → використовується для пушу в `rontoday` (як колаборатор) і в `deploy` ремоут (форк ecl1pseee55)
-- `GITHUB_TOKEN1` — токен іншого акаунту (`dev-comakers`) → синхронізований дзеркальний репо, також підключений для деплою
+- `GITHUB_TOKEN` — токен акаунту `ecl1pseee55` → пуш в `rontoday` (як колаборатор) і `deploy` ремоут
+- `GITHUB_TOKEN1` — токен акаунту `dev-comakers` → пуш в `dev-comakers` ремоут (Vercel)
 
 **Git ремоути локально:**
 ```
-origin       → rontoday/farline-platforma-nabidky   (без токена в URL — через Keychain або треба додати GITHUB_TOKEN)
-deploy       → ecl1pseee55/farline-platforma-nabidky (GITHUB_TOKEN) → Vercel auto-deploy
-dev-comakers → dev-comakers/farline-platforma-nabidky (GITHUB_TOKEN1)
+origin       → rontoday/farline-platforma-nabidky      (GITHUB_TOKEN, вшитий в URL)
+deploy       → ecl1pseee55/farline-platforma-nabidky   (GITHUB_TOKEN)
+dev-comakers → dev-comakers/farline-platforma-nabidky  (GITHUB_TOKEN1) → Vercel auto-deploy
 ```
 
 **Воркфлоу для нових змін:**
-1. Комітити локально
-2. `git push origin main` → rontoday (основний репо)
-3. `git push deploy main` → ecl1pseee55 → Vercel auto-deploy (для тестування)
+1. Комітити локально (git user: `dev-comakers / dev@comakers.cz` — вже налаштовано)
+2. `git push origin main:develop` → rontoday develop (основний репо)
+3. `git push dev-comakers main` → Vercel auto-deploy (для тестування)
 4. Після підтвердження на Vercel → деплой на Hetzner (Блок 12)
 
 ---
@@ -113,17 +114,14 @@ dev-comakers → dev-comakers/farline-platforma-nabidky (GITHUB_TOKEN1)
 
 ## На чому ЗАСТРЯГЛИ зараз
 
-### Проблема: Vercel Hobby plan + два акаунти
+### Проблема: Vercel Hobby plan + git user
 
-**Симптом:** коміти від git user `coMakers` (lokálny config) блокуються Vercel — "Deployment Blocked, commit author did not have contributing access".
+**Вирішено:** git config налаштований на `dev-comakers / dev@comakers.cz` — саме цей акаунт зареєстрований на Vercel. Коміти проходять.
 
-**Причина:** Vercel проєкт під акаунтом `ecl1pseee55`, але коміти підписані іншим git user. Hobby план не підтримує співпрацю.
-
-**Що ще виявилось:** при спробі зробити Redeploy вручну через dashboard Vercel показав попередження про team collaboration і можливо перевів проєкт у team workspace, який потребує Pro план.
+**Попередня проблема (вирішена):** коміти були від `coMakers` (capital M), Vercel блокував — "Deployment Blocked, commit author did not have contributing access". Виправлено зміною git config.
 
 ### Останній задеплоєний commit
-- `4e9d18a` — "Merge develop → main: production-ready release (Blocks 0-11 + fixes)" — **живий на prod**
-- `75203b3` — "fix: offer editor layout overflow" — **є в коді, але не задеплоєний** (заблокований Vercel)
+- `11d662d` — "fix: three UI bugs" — запушено в `dev-comakers main` → Vercel auto-deploy
 
 ### Варіанти вирішення
 
@@ -146,16 +144,33 @@ git config user.name "ecl1pseee55"
 
 ---
 
-## Workflow для нових змін
+## Робочий процес (домовленість з командою)
 
-1. Розробляти в `develop` гілці
-2. Мерджити в `main`
-3. Пушити в **обидва** репозиторії:
-   ```bash
-   git push origin main          # rontoday
-   git push deploy main          # ecl1pseee55 → Vercel
-   ```
-   (remote `deploy` треба додати: `git remote add deploy https://TOKEN@github.com/ecl1pseee55/farline-platforma-nabidky.git`)
+Це актуальний воркфлоу, узгоджений між Platon і Claude. Дотримуватись у кожній сесії.
+
+### Крок 1 — Розробка + push для перевірки на Vercel
+
+Після кожного фіксу або фічі Claude робить:
+```bash
+git push origin main:develop     # rontoday/develop — для PR-history
+git push dev-comakers main       # Vercel auto-deploy — щоб одразу бачити зміни
+```
+
+### Крок 2 — Перевірка на Vercel
+
+Platon перевіряє на `farline-platforma-nabidky-6s3w.vercel.app` що нічого не впало.
+
+### Крок 3 — PR + merge в main (тільки після підтвердження)
+
+Якщо все ок — Claude через GitHub API:
+1. Створює PR `develop → main` на rontoday з описом що зроблено
+2. Мерджить PR
+3. Пушить `origin main` щоб локальний main і remote були синхронізовані
+
+### Що НЕ робити
+- Не мерджити в main без перевірки на Vercel
+- Не пушити напряму в `origin main` в обхід PR
+- Не створювати PR вручну через GitHub UI — Claude робить це через API
 
 ---
 
@@ -168,4 +183,4 @@ git config user.name "ecl1pseee55"
 
 ## Наступний крок
 
-Вирішити Vercel deployment issue (варіант A або B вище), потім починати Блок 6 (НДС + статуси позицій) — він найважливіший для реального використання.
+Продовжувати виправляти баги і доробляти відсутній функціонал (Блок 12 — Docker/Hetzner deploy).

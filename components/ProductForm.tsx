@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X } from "@phosphor-icons/react/dist/ssr";
+import { useState, useEffect, useRef } from "react";
+import { X, Camera } from "@phosphor-icons/react/dist/ssr";
 import { useToast } from "./Toast";
 import type { CategoryField, Product, ProductCategory } from "@/lib/types";
 
@@ -18,6 +18,7 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
   const { push } = useToast();
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [busy, setBusy] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
@@ -27,6 +28,8 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
   const [unitPrice, setUnitPrice] = useState("");
   const [currency, setCurrency] = useState<"CZK" | "USD" | "EUR">("CZK");
   const [params, setParams] = useState<Record<string, string>>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -43,20 +46,39 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
       setName(product.name);
       setBrand(product.brand);
       setDecor(product.decor);
-      setCategoryId("");
       setUnitPrice(String(product.unitPrice));
       setCurrency(product.currency);
       setParams(product.parameters ?? {});
+      setImageFile(null);
+      setImagePreview(null);
     } else {
       setCode(""); setName(""); setBrand(""); setDecor("");
       setCategoryId(""); setUnitPrice(""); setCurrency("CZK"); setParams({});
+      setImageFile(null);
+      setImagePreview(null);
     }
   }, [open, product]);
+
+  useEffect(() => {
+    if (!open || !product || categories.length === 0) return;
+    const cat = categories.find((c) => c.key === product.type);
+    if (cat) setCategoryId(cat.id);
+  }, [open, product, categories]);
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
   const categoryFields: CategoryField[] = selectedCategory?.fields ?? [];
 
   if (!open) return null;
+
+  const handleImageChange = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      push("Vyberte obrázek (JPG, PNG, WebP)", "info");
+      return;
+    }
+    setImageFile(file);
+    const url = URL.createObjectURL(file);
+    setImagePreview(url);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +103,19 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
       const data = await res.json();
       if (!res.ok) { push(data.error?.message ?? "Chyba při ukládání", "info"); return; }
 
-      onSaved(data.product);
+      let savedProduct: Product = data.product;
+
+      if (imageFile && !product) {
+        const fd = new FormData();
+        fd.append("image", imageFile);
+        const imgRes = await fetch(`/api/products/${savedProduct.id}/photo`, { method: "POST", body: fd });
+        if (imgRes.ok) {
+          const imgData = await imgRes.json();
+          savedProduct = { ...savedProduct, imageUrl: imgData.imagePath ? `/api/uploads/${imgData.imagePath}` : null };
+        }
+      }
+
+      onSaved(savedProduct);
       push(product ? "Produkt uložen" : "Produkt přidán");
       onClose();
     } catch {
@@ -104,6 +138,48 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
         </header>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 overflow-y-auto">
+          {!product && (
+            <div>
+              <span className="text-xs text-zinc-500 uppercase tracking-wider">Fotografie</span>
+              <div
+                className="mt-1 relative w-full h-32 rounded-xl border-2 border-dashed border-zinc-200 hover:border-zinc-300 flex items-center justify-center cursor-pointer overflow-hidden bg-zinc-50 transition-colors"
+                onClick={() => imageInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const f = e.dataTransfer.files[0];
+                  if (f) handleImageChange(f);
+                }}
+              >
+                {imagePreview ? (
+                  <>
+                    <img src={imagePreview} alt="preview" className="w-full h-full object-contain" />
+                    <div className="absolute inset-0 bg-zinc-900/0 hover:bg-zinc-900/20 transition-colors flex items-center justify-center">
+                      <span className="opacity-0 hover:opacity-100 text-xs text-white font-medium bg-zinc-900/60 px-2 py-1 rounded-full transition-opacity">Změnit</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center">
+                    <Camera size={24} className="mx-auto mb-1 text-zinc-400" weight="duotone" />
+                    <span className="text-xs text-zinc-500">Nahrát fotografii</span>
+                    <span className="block text-[10px] text-zinc-400 mt-0.5">nebo přetáhněte soubor sem</span>
+                  </div>
+                )}
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleImageChange(f);
+                    e.target.value = "";
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs text-zinc-500 uppercase tracking-wider">Kód *</span>

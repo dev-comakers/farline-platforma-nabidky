@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { Sidebar } from "@/components/Sidebar";
+import { MobileLayout } from "@/components/MobileLayout";
 import { ToastProvider } from "@/components/Toast";
 import { verifyToken } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
@@ -25,10 +26,9 @@ export default async function InternalLayout({
 
   return (
     <ToastProvider>
-      <div className="flex min-h-screen">
-        <Sidebar user={user} newCommentsCount={newCommentsCount} />
-        <main className="flex-1 min-w-0">{children}</main>
-      </div>
+      <MobileLayout sidebar={<Sidebar user={user} newCommentsCount={newCommentsCount} />}>
+        {children}
+      </MobileLayout>
     </ToastProvider>
   );
 }
