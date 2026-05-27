@@ -137,8 +137,8 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/30 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-lg mx-4 shadow-2xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-zinc-900/30 backdrop-blur-sm">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg sm:mx-4 shadow-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col">
         <header className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between shrink-0">
           <h3 className="text-lg font-semibold text-zinc-900" style={{ fontFamily: "var(--font-display)" }}>
             {product ? "Upravit produkt" : "Nový produkt"}

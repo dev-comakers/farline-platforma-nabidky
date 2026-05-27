@@ -97,14 +97,14 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
   };
 
   return (
-    <div className="px-10 py-8 max-w-[1400px]">
-      <header className="flex items-end justify-between mb-8">
+    <div className="px-4 sm:px-6 lg:px-10 py-6 lg:py-8 max-w-[1400px]">
+      <header className="flex flex-wrap items-start sm:items-end justify-between gap-4 mb-6 lg:mb-8">
         <div>
           <div className="text-xs uppercase tracking-[0.2em] text-zinc-400 mb-2">
             Katalog
           </div>
           <h1
-            className="text-4xl font-semibold tracking-tight text-zinc-900"
+            className="text-2xl sm:text-4xl font-semibold tracking-tight text-zinc-900"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Produkty
@@ -113,16 +113,16 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
             </span>
           </h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setImportOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-zinc-700 border border-zinc-200 bg-white hover:bg-zinc-50"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-zinc-700 border border-zinc-200 bg-white hover:bg-zinc-50 min-h-[44px]"
           >
             <UploadSimple size={16} weight="bold" /> Importovat CSV
           </button>
           <button
             onClick={() => { setEditProduct(undefined); setFormOpen(true); }}
-            className="btn-tactile inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white shadow-sm"
+            className="btn-tactile inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white shadow-sm min-h-[44px]"
             style={{ background: "var(--accent)" }}
           >
             <Plus size={16} weight="bold" /> Přidat produkt
@@ -130,8 +130,8 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
         </div>
       </header>
 
-      <div className="flex items-center gap-3 mb-4">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="relative flex-1 min-w-[200px]">
           <MagnifyingGlass
             size={16}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
@@ -141,14 +141,14 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
             placeholder="Hledat kód, název, značku, dekor..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2.5 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400"
+            className="w-full pl-9 pr-3 py-2.5 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400 min-h-[44px]"
           />
         </div>
 
         <select
           value={type ?? ""}
           onChange={(e) => setType((e.target.value || null) as ProductType | null)}
-          className="px-3 py-2.5 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400"
+          className="px-3 py-2.5 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400 min-h-[44px]"
         >
           <option value="">Všechny typy</option>
           {types.map((t) => (
@@ -158,7 +158,7 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
           ))}
         </select>
 
-        <div className="ml-auto flex bg-white border border-zinc-200 rounded-lg p-0.5">
+        <div className="flex bg-white border border-zinc-200 rounded-lg p-0.5">
           <button
             onClick={() => setView("grid")}
             className={`p-2 rounded-md ${

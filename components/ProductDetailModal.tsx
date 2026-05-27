@@ -56,13 +56,13 @@ export function ProductDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/30 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-zinc-900/30 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white rounded-2xl w-full max-w-[640px] mx-4 shadow-2xl overflow-hidden animate-fade-in-up">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-[640px] sm:mx-4 shadow-2xl overflow-hidden animate-fade-in-up max-h-[92vh] sm:max-h-[85vh] overflow-y-auto">
         {/* Top: photo + info */}
-        <div className="flex">
-          <div className="w-[220px] shrink-0 bg-zinc-50 flex items-center justify-center p-6 min-h-[280px]">
+        <div className="flex flex-col sm:flex-row">
+          <div className="sm:w-[220px] shrink-0 bg-zinc-50 flex items-center justify-center p-6 min-h-[180px] sm:min-h-[280px]">
             {product.imageUrl ? (
               <img
                 src={product.imageUrl}
@@ -74,7 +74,7 @@ export function ProductDetailModal({
             )}
           </div>
 
-          <div className="flex-1 relative px-6 py-5 max-h-[60vh] overflow-y-auto">
+          <div className="flex-1 relative px-6 py-5 sm:max-h-[60vh] sm:overflow-y-auto">
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors"

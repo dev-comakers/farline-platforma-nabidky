@@ -76,14 +76,14 @@ export default async function DashboardPage() {
     .slice(0, 6);
 
   return (
-    <div className="px-10 py-8 max-w-[1400px]">
-      <header className="flex items-end justify-between mb-8">
+    <div className="px-4 sm:px-6 lg:px-10 py-6 lg:py-8 max-w-[1400px]">
+      <header className="flex flex-wrap items-start sm:items-end justify-between gap-4 mb-6 lg:mb-8">
         <div>
           <div className="text-xs uppercase tracking-[0.2em] text-zinc-400 mb-2">
             Dashboard
           </div>
           <h1
-            className="text-4xl font-semibold tracking-tight text-zinc-900"
+            className="text-2xl sm:text-4xl font-semibold tracking-tight text-zinc-900"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Přehled
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
           </div>
 
           <section className="bg-white border border-zinc-200/70 rounded-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
               <h2
                 className="text-lg font-semibold text-zinc-900"
                 style={{ fontFamily: "var(--font-display)" }}
@@ -130,7 +130,8 @@ export default async function DashboardPage() {
                 Všechny <ArrowRight size={12} />
               </Link>
             </div>
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[480px]">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wider text-zinc-400">
                   <th className="px-6 py-3 font-medium">Akce</th>
@@ -162,6 +163,7 @@ export default async function DashboardPage() {
                 })}
               </tbody>
             </table>
+            </div>
           </section>
         </div>
 

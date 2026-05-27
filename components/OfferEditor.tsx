@@ -202,7 +202,7 @@ export function OfferEditor({
             <input
               value={offer.name}
               onChange={(e) => updateField("name", e.target.value)}
-              className="block w-full bg-transparent text-4xl font-semibold tracking-tight text-zinc-900 focus:outline-none border-b border-zinc-200/50 hover:border-zinc-300 focus:border-zinc-300 py-1 pr-8 transition-colors"
+              className="block w-full bg-transparent text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-zinc-900 focus:outline-none border-b border-zinc-200/50 hover:border-zinc-300 focus:border-zinc-300 py-1 pr-8 transition-colors"
               style={{ fontFamily: "var(--font-display)" }}
             />
             <PencilSimple
@@ -449,7 +449,7 @@ export function OfferEditor({
         </section>
       </div>
 
-      <aside className="xl:sticky xl:top-0 xl:h-screen border-l border-zinc-200/70 bg-white/50 px-6 py-8 overflow-y-auto">
+      <aside className="xl:sticky xl:top-0 xl:h-screen border-t xl:border-t-0 xl:border-l border-zinc-200/70 bg-white/50 px-4 xl:px-6 py-6 xl:py-8 overflow-y-auto">
         <div className="text-xs uppercase tracking-[0.2em] text-zinc-400 mb-4">
           Akce
         </div>
