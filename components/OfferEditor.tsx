@@ -676,12 +676,15 @@ function ToggleRow({
       <Icon size={15} />
       <span className="flex-1 text-left">{label}</span>
       <span
-        className="w-10 h-5 rounded-full relative shrink-0 overflow-hidden transition-colors duration-200"
+        className="w-10 h-5 rounded-full shrink-0 flex items-center px-0.5 transition-colors duration-200"
         style={{ backgroundColor: checked ? "#10b981" : "#d4d4d8" }}
       >
         <span
-          className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200"
-          style={{ transform: checked ? "translateX(22px)" : "translateX(2px)" }}
+          className="w-4 h-4 rounded-full bg-white transition-all duration-200"
+          style={{
+            boxShadow: "0 1px 2px rgba(0,0,0,0.18)",
+            marginLeft: checked ? "20px" : "0px",
+          }}
         />
       </span>
     </button>
