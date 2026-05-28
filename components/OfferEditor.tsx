@@ -60,6 +60,13 @@ export function OfferEditor({
   const [offer, setOffer] = useState<Offer>(initialOffer);
   const [products, setProducts] = useState<Product[]>(snapshotProducts);
   const [comments, setComments] = useState<Comment[]>(initialComments);
+
+  useEffect(() => {
+    fetch(`/api/offers/${initialOffer.id}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.offer?.status) setOffer((prev) => ({ ...prev, status: d.offer.status })); })
+      .catch(() => {});
+  }, [initialOffer.id]);
   const [showCatalog, setShowCatalog] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
