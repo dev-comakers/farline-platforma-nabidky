@@ -42,7 +42,7 @@ export default async function KategorieAdminPage() {
   }));
 
   return (
-    <div className="px-10 py-8 max-w-[900px]">
+    <div className="px-10 py-8">
       <header className="mb-8">
         <div className="text-xs uppercase tracking-[0.2em] text-zinc-400 mb-2">Nastavení</div>
         <h1

@@ -17,6 +17,8 @@ export interface ImportRowValid {
   categoryId: string;
   unitPrice: number;
   currency: "CZK" | "USD" | "EUR";
+  parameters: Record<string, string>;
+  description?: string;
 }
 
 export interface ImportRowError {
@@ -36,6 +38,15 @@ const COLUMN_MAP: Record<string, string> = {
   "typ": "typ", "type": "typ",
   "cena": "price", "price": "price",
   "měna": "currency", "mena": "currency", "currency": "currency",
+  "popis": "description", "description": "description",
+  "material": "param_material", "materiál": "param_material",
+  "povrch": "param_povrch",
+  "rozmery": "param_rozmery", "rozměry": "param_rozmery",
+  "pripojeni": "param_pripojeni", "připojení": "param_pripojeni",
+  "zaruka": "param_zaruka", "záruka": "param_zaruka",
+  "prutok": "param_prutok", "průtok": "param_prutok",
+  "objem": "param_objem",
+  "hmotnost": "param_hmotnost",
 };
 
 const rowSchema = z.object({
@@ -91,11 +102,21 @@ export function validateRows(
       return { index, valid: false, raw, errors: [`Neznámý typ kategorie: "${typ}"`] } satisfies ImportRowError;
     }
 
+    const parameters: Record<string, string> = {};
+    for (const [k, v] of Object.entries(raw)) {
+      if (k.startsWith("param_") && String(v).trim()) {
+        parameters[k.slice(6)] = String(v).trim();
+      }
+    }
+    const description = raw.description?.trim() || undefined;
+
     return {
       index, valid: true,
       code, name, brand, decor,
       categoryKey: typ, categoryId,
       unitPrice: price, currency,
+      parameters,
+      description,
     } satisfies ImportRowValid;
   });
 }

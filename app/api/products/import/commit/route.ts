@@ -11,6 +11,8 @@ const commitRowSchema = z.object({
   categoryId: z.string().uuid(),
   unitPrice: z.number().positive(),
   currency: z.enum(["CZK", "USD", "EUR"]),
+  parameters: z.record(z.string(), z.string()).optional(),
+  description: z.string().max(2000).nullable().optional(),
 });
 
 const commitSchema = z.object({
@@ -41,12 +43,22 @@ export async function POST(req: NextRequest) {
     if (existing) {
       await prisma.product.update({
         where: { code: row.code },
-        data: { name: row.name, brand: row.brand, decor: row.decor, categoryId: row.categoryId, unitPrice: row.unitPrice, currency: row.currency },
+        data: {
+          name: row.name, brand: row.brand, decor: row.decor,
+          categoryId: row.categoryId, unitPrice: row.unitPrice, currency: row.currency,
+          ...(row.parameters ? { parameters: row.parameters } : {}),
+          ...(row.description !== undefined ? { description: row.description ?? null } : {}),
+        },
       });
       updated++;
     } else {
       await prisma.product.create({
-        data: { code: row.code, name: row.name, brand: row.brand, decor: row.decor, categoryId: row.categoryId, unitPrice: row.unitPrice, currency: row.currency, parameters: {} },
+        data: {
+          code: row.code, name: row.name, brand: row.brand, decor: row.decor,
+          categoryId: row.categoryId, unitPrice: row.unitPrice, currency: row.currency,
+          parameters: row.parameters ?? {},
+          description: row.description ?? null,
+        },
       });
       created++;
     }

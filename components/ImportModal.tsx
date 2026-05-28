@@ -12,6 +12,15 @@ const TEMPLATE_COLUMNS = [
   { col: "typ", required: true, desc: "Klíč kategorie (viz seznam níže)", example: "umyvadlove_baterie" },
   { col: "cena", required: true, desc: "Cena — číslo bez mezer", example: "15900" },
   { col: "měna", required: false, desc: "CZK / USD / EUR — výchozí CZK", example: "CZK" },
+  { col: "popis", required: false, desc: "Popis produktu (volný text)", example: "Elegantní baterie" },
+  { col: "material", required: false, desc: "Materiál", example: "Mosaz" },
+  { col: "povrch", required: false, desc: "Povrchová úprava / finish", example: "Chrom" },
+  { col: "rozmery", required: false, desc: "Rozměry produktu", example: "180×100×90 mm" },
+  { col: "pripojeni", required: false, desc: "Připojení (závit, průměr…)", example: "1/2\"" },
+  { col: "zaruka", required: false, desc: "Záruka v rocích", example: "5" },
+  { col: "prutok", required: false, desc: "Průtok (l/min)", example: "5" },
+  { col: "objem", required: false, desc: "Objem (litry)", example: "160" },
+  { col: "hmotnost", required: false, desc: "Hmotnost (kg)", example: "2.4" },
 ];
 
 const CATEGORY_KEYS = [
@@ -21,11 +30,11 @@ const CATEGORY_KEYS = [
 ];
 
 const TEMPLATE_CSV = [
-  "kód,název,značka,dekor,typ,cena,měna",
-  "LB-TAP-001,Umyvadlová baterie Classic,Lefroy Brooks,Chrom,umyvadlove_baterie,15900,CZK",
-  "CB-VAN-002,Vanová baterie Noir,CoalBrook,Broušený nikl,vanove_baterie,22500,CZK",
-  "RD-SHW-003,Sprchový set Premium,Radomonte,Bílá mat,sprchove_sety,18750,EUR",
-  "VI-BAT-004,Volně stojící vana,Victoria Albert,,vany,89000,CZK",
+  "kód,název,značka,dekor,typ,cena,měna,popis,material,povrch,rozmery,pripojeni,zaruka,prutok,objem,hmotnost",
+  "LB-TAP-001,Umyvadlová baterie Classic,Lefroy Brooks,Chrom,umyvadlove_baterie,15900,CZK,Elegantní umyvadlová baterie,Mosaz,Chrom,,,Lifetime,,",
+  "CB-VAN-002,Vanová baterie Noir,CoalBrook,Broušený nikl,vanove_baterie,22500,CZK,,Mosaz,Broušený nikl,,,5,,",
+  "RD-SHW-003,Sprchový set Premium,Radomonte,Bílá mat,sprchove_sety,18750,EUR,,,Bílá mat,,,,,",
+  "VI-BAT-004,Volně stojící vana,Victoria Albert,,vany,89000,CZK,,,,,,,160,",
 ].join("\n");
 
 function downloadTemplate() {
@@ -49,6 +58,8 @@ interface ImportRowValid {
   categoryId: string;
   unitPrice: number;
   currency: string;
+  parameters?: Record<string, string>;
+  description?: string;
 }
 
 interface ImportRowError {
@@ -118,8 +129,10 @@ export function ImportModal({
     if (!preview) return;
     const validRows = preview.rows
       .filter((r): r is ImportRowValid => r.valid)
-      .map(({ code, name, brand, decor, categoryId, unitPrice, currency }) => ({
+      .map(({ code, name, brand, decor, categoryId, unitPrice, currency, parameters, description }) => ({
         code, name, brand, decor, categoryId, unitPrice, currency,
+        ...(parameters && Object.keys(parameters).length > 0 ? { parameters } : {}),
+        ...(description ? { description } : {}),
       }));
 
     if (validRows.length === 0) { push("Žádné validní řádky k importu", "info"); return; }

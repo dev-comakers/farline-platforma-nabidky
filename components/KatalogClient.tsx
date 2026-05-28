@@ -10,6 +10,7 @@ import {
   ListBullets,
   PencilSimple,
   Trash,
+  CaretDown,
 } from "@phosphor-icons/react/dist/ssr";
 import { ProductCard } from "@/components/ProductCard";
 import { ImportModal } from "@/components/ImportModal";
@@ -145,18 +146,21 @@ export function KatalogClient({ initialProducts }: { initialProducts: Product[] 
           />
         </div>
 
-        <select
-          value={type ?? ""}
-          onChange={(e) => setType((e.target.value || null) as ProductType | null)}
-          className="px-3 py-2.5 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400 min-h-[44px]"
-        >
-          <option value="">Všechny typy</option>
-          {types.map((t) => (
-            <option key={t} value={t}>
-              {PRODUCT_TYPE_LABEL[t]}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={type ?? ""}
+            onChange={(e) => setType((e.target.value || null) as ProductType | null)}
+            className="appearance-none pl-3 pr-8 py-2.5 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400 min-h-[44px]"
+          >
+            <option value="">Všechny typy</option>
+            {types.map((t) => (
+              <option key={t} value={t}>
+                {PRODUCT_TYPE_LABEL[t]}
+              </option>
+            ))}
+          </select>
+          <CaretDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+        </div>
 
         <div className="flex bg-white border border-zinc-200 rounded-lg p-0.5">
           <button
