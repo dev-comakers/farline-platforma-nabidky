@@ -43,6 +43,7 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
   const [showDescription, setShowDescription] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -67,12 +68,14 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
       setShowDescription(!!desc);
       setImageFile(null);
       setImagePreview(product.imageUrl ?? null);
+      setRemoveImage(false);
     } else {
       setCode(""); setName(""); setBrand(""); setDecor("");
       setCategoryId(""); setUnitPrice(""); setCurrency("CZK"); setParams({});
       setDescription(""); setShowDescription(false);
       setImageFile(null);
       setImagePreview(null);
+      setRemoveImage(false);
     }
   }, [open, product]);
 
@@ -122,7 +125,10 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
 
       let savedProduct: Product = data.product;
 
-      if (imageFile) {
+      if (removeImage && !imageFile) {
+        await fetch(`/api/products/${savedProduct.id}/photo`, { method: "DELETE" });
+        savedProduct = { ...savedProduct, imageUrl: null };
+      } else if (imageFile) {
         const fd = new FormData();
         fd.append("image", imageFile);
         const imgRes = await fetch(`/api/products/${savedProduct.id}/photo`, { method: "POST", body: fd });
@@ -160,7 +166,7 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
           <div>
             <span className="text-xs text-zinc-500 uppercase tracking-wider">Fotografie</span>
             <div
-              className="mt-1 relative w-full h-32 rounded-xl border-2 border-dashed border-zinc-200 hover:border-zinc-300 flex items-center justify-center cursor-pointer overflow-hidden bg-zinc-50 transition-colors"
+              className="mt-1 relative w-full h-32 rounded-xl border-2 border-dashed border-zinc-200 hover:border-zinc-300 flex items-center justify-center cursor-pointer overflow-hidden bg-zinc-50 transition-colors group"
               onClick={() => imageInputRef.current?.click()}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
@@ -172,9 +178,17 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
               {imagePreview ? (
                 <>
                   <img src={imagePreview} alt="preview" className="w-full h-full object-contain" />
-                  <div className="absolute inset-0 bg-zinc-900/0 hover:bg-zinc-900/20 transition-colors flex items-center justify-center">
-                    <span className="opacity-0 hover:opacity-100 text-xs text-white font-medium bg-zinc-900/60 px-2 py-1 rounded-full transition-opacity">Změnit</span>
+                  <div className="absolute inset-0 bg-zinc-900/0 group-hover:bg-zinc-900/20 transition-colors flex items-center justify-center">
+                    <span className="opacity-0 group-hover:opacity-100 text-xs text-white font-medium bg-zinc-900/60 px-2 py-1 rounded-full transition-opacity">Změnit</span>
                   </div>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setImageFile(null); setImagePreview(null); setRemoveImage(true); }}
+                    className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/90 shadow flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                    aria-label="Odebrat fotografii"
+                  >
+                    <X size={12} className="text-zinc-700" weight="bold" />
+                  </button>
                 </>
               ) : (
                 <div className="text-center">

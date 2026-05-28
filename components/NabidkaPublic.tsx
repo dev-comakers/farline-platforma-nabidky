@@ -7,6 +7,7 @@ import {
   CheckCircle,
   ChatCircleDots,
   PaperPlaneTilt,
+  X,
 } from "@phosphor-icons/react/dist/ssr";
 import {
   offerSummary,
@@ -56,6 +57,58 @@ export function NabidkaPublic({
   const [text, setText] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const [commentingItem, setCommentingItem] = useState<{ id: string; name: string; code: string } | null>(null);
+  const [popupPos, setPopupPos] = useState<{ top: number; right: number } | null>(null);
+  const [inlineEmail, setInlineEmail] = useState("");
+  const [inlineName, setInlineName] = useState("");
+  const [inlineText, setInlineText] = useState("");
+  const [inlineSubmitting, setInlineSubmitting] = useState(false);
+  const [inlineSubmitted, setInlineSubmitted] = useState(false);
+
+  const openCommentPopup = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    item: { id: string; name: string; code: string }
+  ) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPopupPos({
+      top: Math.min(rect.bottom + 6, window.innerHeight - 320),
+      right: window.innerWidth - rect.right,
+    });
+    setCommentingItem(item);
+    setInlineEmail(""); setInlineName(""); setInlineText("");
+    setInlineSubmitted(false);
+  };
+
+  const closeCommentPopup = () => {
+    setCommentingItem(null);
+    setPopupPos(null);
+  };
+
+  const handleInlineSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inlineEmail.trim() || !inlineText.trim() || !commentingItem) return;
+    setInlineSubmitting(true);
+    try {
+      const authorName = inlineName.trim() || inlineEmail.trim();
+      const commentText = `Re: ${commentingItem.name}${commentingItem.code ? ` (${commentingItem.code})` : ""}\n\n${inlineText.trim()}`;
+      const res = await fetch(`/api/public/offers/${offer.shareId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ authorName, authorEmail: inlineEmail.trim(), text: commentText }),
+      });
+      if (res.ok) {
+        const { comment } = await res.json() as { comment: Comment };
+        setComments((prev) => [...prev, comment]);
+        setInlineSubmitted(true);
+        push("Komentář odeslán");
+        setTimeout(() => closeCommentPopup(), 1500);
+      }
+    } finally {
+      setInlineSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,6 +183,7 @@ export function NabidkaPublic({
                 <th className="px-2 py-3 font-medium text-right">Jedn. cena</th>
                 <th className="px-2 py-3 font-medium text-center">Sleva</th>
                 <th className="px-5 py-3 font-medium text-right">Po slevě</th>
+                <th className="w-10 pr-3" />
               </tr>
             </thead>
             <tbody>
@@ -144,7 +198,7 @@ export function NabidkaPublic({
                 return (
                   <tr
                     key={item.id}
-                    className="border-t border-zinc-100 hover:bg-zinc-50/60 cursor-pointer transition-colors"
+                    className="border-t border-zinc-100 hover:bg-zinc-50/60 cursor-pointer transition-colors group"
                     onClick={() => setDetailProduct(p)}
                   >
                     <td className="px-5 py-4">
@@ -178,6 +232,16 @@ export function NabidkaPublic({
                           {formatCurrency(beforeDisplay, offer.currency)}
                         </div>
                       )}
+                    </td>
+                    <td className="pr-3 py-4 w-10">
+                      <button
+                        onClick={(e) => openCommentPopup(e, { id: item.id, name: p.name, code: p.code ?? "" })}
+                        className="opacity-0 group-hover:opacity-100 transition-all w-7 h-7 rounded-full flex items-center justify-center hover:scale-110"
+                        style={{ background: "var(--accent)" }}
+                        aria-label={`Komentovat ${p.name}`}
+                      >
+                        <ChatCircleDots size={13} weight="bold" className="text-white" />
+                      </button>
                     </td>
                   </tr>
                 );
@@ -297,6 +361,72 @@ export function NabidkaPublic({
           onClose={() => setDetailProduct(null)}
           hideSheet
         />
+      )}
+
+      {commentingItem && popupPos && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={closeCommentPopup} />
+          <div
+            className="fixed z-50 w-72 bg-white border border-zinc-200 rounded-2xl shadow-2xl p-4 animate-fade-in-up"
+            style={{ top: popupPos.top, right: popupPos.right }}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="min-w-0 flex-1 mr-2">
+                <div className="text-[10px] uppercase tracking-[0.15em] text-zinc-400">Komentář k položce</div>
+                <div className="text-sm font-medium text-zinc-900 mt-0.5 leading-tight truncate">
+                  {commentingItem.name}
+                </div>
+              </div>
+              <button
+                onClick={closeCommentPopup}
+                className="p-1 rounded-lg hover:bg-zinc-100 text-zinc-400 shrink-0"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {inlineSubmitted ? (
+              <div className="py-6 text-center text-sm text-emerald-700 flex items-center justify-center gap-1.5">
+                <CheckCircle size={16} weight="fill" /> Komentář odeslán
+              </div>
+            ) : (
+              <form onSubmit={handleInlineSubmit} className="space-y-2">
+                <input
+                  type="email"
+                  placeholder="Váš e-mail *"
+                  value={inlineEmail}
+                  onChange={(e) => setInlineEmail(e.target.value)}
+                  required
+                  autoFocus
+                  className="w-full px-3 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-lg focus:outline-none focus:border-zinc-400"
+                />
+                <input
+                  type="text"
+                  placeholder="Jméno (nepovinné)"
+                  value={inlineName}
+                  onChange={(e) => setInlineName(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-lg focus:outline-none focus:border-zinc-400"
+                />
+                <textarea
+                  value={inlineText}
+                  onChange={(e) => setInlineText(e.target.value)}
+                  placeholder="Váš komentář…"
+                  required
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-lg focus:outline-none focus:border-zinc-400 resize-none"
+                />
+                <button
+                  type="submit"
+                  disabled={!inlineEmail || !inlineText || inlineSubmitting}
+                  className="btn-tactile w-full py-2 text-sm font-medium text-white rounded-lg disabled:opacity-40"
+                  style={{ background: "var(--accent)" }}
+                >
+                  {inlineSubmitting ? "Odesílám…" : "Odeslat"}
+                </button>
+              </form>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
