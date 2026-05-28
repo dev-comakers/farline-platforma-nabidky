@@ -115,6 +115,7 @@ export function OfferEditor({
     if (res.ok) {
       setOffer((prev) => ({ ...prev, status }));
       push(status === "odeslana" ? "Nabídka označena jako odeslaná" : "Nabídka potvrzena");
+      router.refresh();
     }
   };
 
