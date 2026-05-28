@@ -295,6 +295,7 @@ export function NabidkaPublic({
           product={detailProduct}
           categoryFields={getCategoryFields(detailProduct)}
           onClose={() => setDetailProduct(null)}
+          hideSheet
         />
       )}
     </div>

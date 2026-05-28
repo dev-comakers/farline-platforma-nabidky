@@ -12,6 +12,7 @@ interface ProductDetailModalProps {
   onClose: () => void;
   onAdd?: (productId: string) => void;
   allowUpload?: boolean;
+  hideSheet?: boolean;
 }
 
 export function ProductDetailModal({
@@ -20,6 +21,7 @@ export function ProductDetailModal({
   onClose,
   onAdd,
   allowUpload = false,
+  hideSheet = false,
 }: ProductDetailModalProps) {
   const [sheetUrl, setSheetUrl] = useState(product.technicalSheetUrl);
   const [uploading, setUploading] = useState(false);
@@ -123,7 +125,7 @@ export function ProductDetailModal({
         </div>
 
         {/* Technický list */}
-        {(allowUpload || sheetUrl) && (
+        {!hideSheet && (allowUpload || sheetUrl) && (
           <div className="px-6 py-4 border-t border-zinc-100">
             <div className="text-xs text-zinc-500 mb-2">Technický list</div>
             {allowUpload ? (

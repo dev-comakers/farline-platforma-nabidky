@@ -283,9 +283,9 @@ export function OfferEditor({
                   <th className="px-2 py-3 font-medium text-right">Jedn. cena</th>
                   <th className="px-2 py-3 font-medium text-center">Sleva</th>
                   <th className="px-4 py-3 font-medium text-right">Po slevě</th>
-                  <th className="px-2 py-3 font-medium text-center" title="Potvrzeno">P</th>
-                  <th className="px-2 py-3 font-medium text-center" title="Objednáno">O</th>
-                  <th className="px-2 py-3 font-medium text-center" title="Doručeno">D</th>
+                  <th className="w-10 px-2 py-3 font-medium text-center" title="Potvrzeno">P</th>
+                  <th className="w-10 px-2 py-3 font-medium text-center" title="Objednáno">O</th>
+                  <th className="w-10 px-2 py-3 font-medium text-center" title="Doručeno">D</th>
                   <th className="w-8"></th>
                 </tr>
               </thead>
@@ -360,21 +360,21 @@ export function OfferEditor({
                           </div>
                         )}
                       </td>
-                      <td className="px-2 py-3 text-center">
+                      <td className="w-10 px-2 py-3 text-center">
                         <StatusCheckbox
                           checked={item.confirmed}
                           onChange={(v) => handleUpdateItem(item.id, { confirmed: v })}
                           title="Potvrzeno"
                         />
                       </td>
-                      <td className="px-2 py-3 text-center">
+                      <td className="w-10 px-2 py-3 text-center">
                         <StatusCheckbox
                           checked={item.ordered}
                           onChange={(v) => handleUpdateItem(item.id, { ordered: v })}
                           title="Objednáno"
                         />
                       </td>
-                      <td className="px-2 py-3 text-center">
+                      <td className="w-10 px-2 py-3 text-center">
                         <StatusCheckbox
                           checked={item.received}
                           onChange={(v) => handleUpdateItem(item.id, { received: v })}

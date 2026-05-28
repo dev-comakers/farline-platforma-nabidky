@@ -14,6 +14,7 @@ import { formatCurrency, formatRelative, formatDateTime } from "@/lib/calculatio
 import { offerListSelect, mapOffer, commentSelect, mapComment, snapshotProducts } from "@/lib/db/selects";
 import { offerSummary } from "@/lib/calculations";
 import { CreateOfferButton } from "@/components/CreateOfferButton";
+import { ClickableRow } from "@/components/ClickableRow";
 import type { Prisma } from "@prisma/client";
 
 const extendedOfferSelect = {
@@ -152,12 +153,8 @@ export default async function DashboardPage() {
                   const o = mapOffer(dbOffer);
                   const total = offerTotal(dbOffer);
                   return (
-                    <tr key={o.id} className="border-t border-zinc-100 hover:bg-zinc-50/70 cursor-pointer transition-colors">
-                      <td className="px-6 py-4">
-                        <Link href={`/nabidky/${o.id}`} className="font-medium text-zinc-900 hover:underline">
-                          {o.name}
-                        </Link>
-                      </td>
+                    <ClickableRow key={o.id} href={`/nabidky/${o.id}`} className="border-t border-zinc-100 hover:bg-zinc-50/70 transition-colors">
+                      <td className="px-6 py-4 font-medium text-zinc-900">{o.name}</td>
                       <td className="px-6 py-4 text-zinc-600">{o.architect || "—"}</td>
                       <td className="px-6 py-4 text-right font-mono tabular-nums text-zinc-900">
                         {formatCurrency(total, o.currency)}
@@ -165,7 +162,7 @@ export default async function DashboardPage() {
                       <td className="px-6 py-4">
                         <StatusBadge status={o.status} pulse />
                       </td>
-                    </tr>
+                    </ClickableRow>
                   );
                 })}
               </tbody>
