@@ -19,7 +19,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ sha
 
   const offer = await prisma.offer.findUnique({
     where: { shareId },
-    select: { id: true, name: true, shareEnabled: true },
+    select: { id: true, name: true, status: true, shareEnabled: true },
   });
   if (!offer || !offer.shareEnabled) {
     return Response.json({ error: { code: "NOT_FOUND", message: "Nabídka nenalezena" } }, { status: 404 });
@@ -45,10 +45,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ sha
     select: commentSelect,
   });
 
-  await prisma.offer.update({
-    where: { id: offer.id },
-    data: { status: "okomentovana" },
-  });
+  if (offer.status !== "potvrzena") {
+    await prisma.offer.update({
+      where: { id: offer.id },
+      data: { status: "okomentovana" },
+    });
+  }
 
   sendCommentNotification({
     offerName: offer.name,
