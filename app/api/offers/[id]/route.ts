@@ -46,8 +46,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   }
 
   const { id } = await params;
-  const existing = await prisma.offer.findUnique({ where: { id }, select: { id: true } });
+  const existing = await prisma.offer.findUnique({ where: { id }, select: { id: true, status: true } });
   if (!existing) return Response.json({ error: { code: "NOT_FOUND", message: "Nabídka nenalezena" } }, { status: 404 });
+  if (existing.status === "potvrzena") {
+    return Response.json({ error: { code: "FORBIDDEN", message: "Potvrzenou nabídku nelze smazat" } }, { status: 403 });
+  }
 
   await prisma.offer.delete({ where: { id } });
   return new Response(null, { status: 204 });

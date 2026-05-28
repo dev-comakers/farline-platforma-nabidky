@@ -577,7 +577,7 @@ export function OfferEditor({
           />
         </div>
 
-        {userRole === "admin" && (
+        {userRole === "admin" && !locked && (
           <>
             <hr className="my-5 border-zinc-200/60" />
             {showDeleteConfirm ? (
