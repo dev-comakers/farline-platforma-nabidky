@@ -57,7 +57,7 @@ export function ShareModal({
         </header>
         <div className="px-6 py-5 space-y-4">
           <p className="text-sm text-zinc-600">
-            Odkaz si může architekt otevřít bez přihlášení. Komentáře, které nechá,
+            Odkaz si může klient otevřít bez přihlášení. Komentáře, které nechá,
             se objeví zde a budou vám oznámeny e-mailem.
           </p>
           <div className="flex items-center gap-2">
@@ -82,7 +82,7 @@ export function ShareModal({
             </button>
           </div>
           <div className="text-xs text-zinc-500">
-            Tip: otevřete odkaz v novém okně a podívejte se na nabídku očima architekta.
+            Tip: otevřete odkaz v novém okně a podívejte se na nabídku očima klienta.
           </div>
         </div>
       </div>

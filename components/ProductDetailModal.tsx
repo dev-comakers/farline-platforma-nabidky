@@ -123,64 +123,58 @@ export function ProductDetailModal({
         </div>
 
         {/* Technický list */}
-        <div className="px-6 py-4 border-t border-zinc-100">
-          <div className="text-xs text-zinc-500 mb-2">Technický list</div>
-          {allowUpload ? (
-            <>
-              <label
-                className={`flex items-center justify-between px-4 py-3 border border-dashed rounded-xl cursor-pointer transition-colors ${
-                  uploading ? "border-zinc-200 opacity-60 cursor-not-allowed" : "border-zinc-300 hover:border-[#8B7355]"
-                }`}
-              >
-                <div className="flex items-center gap-2 text-sm text-zinc-500">
-                  <UploadSimple size={16} weight="duotone" />
-                  {uploading ? "Nahrávám…" : sheetUrl ? "Nahradit PDF" : "Nahrát PDF"}
-                </div>
-                <span className="text-xs text-zinc-400">max. 10 MB</span>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  className="hidden"
-                  disabled={uploading}
-                  onChange={handleSheetUpload}
-                />
-              </label>
-              {uploadError && <div className="text-xs text-red-500 mt-1">{uploadError}</div>}
-              {sheetUrl && (
-                <a
-                  href={sheetUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs mt-2 hover:underline"
-                  style={{ color: "var(--accent)" }}
+        {(allowUpload || sheetUrl) && (
+          <div className="px-6 py-4 border-t border-zinc-100">
+            <div className="text-xs text-zinc-500 mb-2">Technický list</div>
+            {allowUpload ? (
+              <>
+                <label
+                  className={`flex items-center justify-between px-4 py-3 border border-dashed rounded-xl cursor-pointer transition-colors ${
+                    uploading ? "border-zinc-200 opacity-60 cursor-not-allowed" : "border-zinc-300 hover:border-[#8B7355]"
+                  }`}
                 >
-                  <DownloadSimple size={13} weight="duotone" />
-                  Stáhnout technický list
-                </a>
-              )}
-            </>
-          ) : sheetUrl ? (
-            <a
-              href={sheetUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-medium hover:underline"
-              style={{ color: "var(--accent)" }}
-            >
-              <DownloadSimple size={16} weight="duotone" />
-              Stáhnout technický list
-            </a>
-          ) : (
-            <div className="flex items-center justify-between px-4 py-3 border border-dashed border-zinc-200 rounded-xl">
-              <div className="flex items-center gap-2 text-sm text-zinc-400">
-                <UploadSimple size={16} />
-                Nahrát PDF
-              </div>
-              <span className="text-xs text-zinc-300">max. 10 MB</span>
-            </div>
-          )}
-        </div>
+                  <div className="flex items-center gap-2 text-sm text-zinc-500">
+                    <UploadSimple size={16} weight="duotone" />
+                    {uploading ? "Nahrávám…" : sheetUrl ? "Nahradit PDF" : "Nahrát PDF"}
+                  </div>
+                  <span className="text-xs text-zinc-400">max. 10 MB</span>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    className="hidden"
+                    disabled={uploading}
+                    onChange={handleSheetUpload}
+                  />
+                </label>
+                {uploadError && <div className="text-xs text-red-500 mt-1">{uploadError}</div>}
+                {sheetUrl && (
+                  <a
+                    href={sheetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs mt-2 hover:underline"
+                    style={{ color: "var(--accent)" }}
+                  >
+                    <DownloadSimple size={13} weight="duotone" />
+                    Stáhnout technický list
+                  </a>
+                )}
+              </>
+            ) : (
+              <a
+                href={sheetUrl!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-medium hover:underline"
+                style={{ color: "var(--accent)" }}
+              >
+                <DownloadSimple size={16} weight="duotone" />
+                Stáhnout technický list
+              </a>
+            )}
+          </div>
+        )}
 
         {/* CTA */}
         {onAdd && (

@@ -120,33 +120,38 @@ export function ProductCatalogPanel({
             </div>
           )}
           {filtered.map((p) => (
-            <button
+            <div
               key={p.id}
-              onClick={() => setDetailProduct(p)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-50 text-left group transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-50 group transition-colors"
             >
-              <ProductIconBox type={p.type} size="sm" imageUrl={p.imageUrl} />
-              <div className="flex-1 min-w-0">
-                <div className="font-mono text-[11px] text-zinc-500">{p.code}</div>
-                <div className="text-sm font-medium text-zinc-900 truncate">
-                  {p.name}
+              <button
+                onClick={() => setDetailProduct(p)}
+                className="flex flex-1 items-center gap-3 text-left min-w-0"
+                aria-label={`Detail produktu ${p.name}`}
+              >
+                <ProductIconBox type={p.type} size="sm" imageUrl={p.imageUrl} />
+                <div className="flex-1 min-w-0">
+                  <div className="font-mono text-[11px] text-zinc-500">{p.code}</div>
+                  <div className="text-sm font-medium text-zinc-900 truncate">
+                    {p.name}
+                  </div>
+                  <div className="text-xs text-zinc-500 truncate">
+                    {p.brand} · {p.decor}
+                  </div>
                 </div>
-                <div className="text-xs text-zinc-500 truncate">
-                  {p.brand} · {p.decor}
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="font-mono text-sm tabular-nums text-zinc-900">
+                <span className="font-mono text-sm tabular-nums text-zinc-900 shrink-0">
                   {formatCurrency(p.unitPrice, p.currency)}
                 </span>
-                <span
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-white p-1 rounded-md"
-                  style={{ background: "var(--accent)" }}
-                >
-                  <Plus size={12} weight="bold" />
-                </span>
-              </div>
-            </button>
+              </button>
+              <button
+                onClick={() => { onAdd(p.id); onClose(); }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-white p-1.5 rounded-md"
+                style={{ background: "var(--accent)" }}
+                aria-label={`Přidat ${p.name}`}
+              >
+                <Plus size={12} weight="bold" />
+              </button>
+            </div>
           ))}
         </div>
       </aside>

@@ -56,7 +56,7 @@ export async function exportOfferToExcel(offer: Offer, products: Product[]) {
   ws.getCell("A2").font = { name: "Calibri", size: 11, bold: true };
 
   ws.mergeCells(`G2:${lastCol}2`);
-  ws.getCell("G2").value = offer.architect ? `Architekt: ${offer.architect}` : "";
+  ws.getCell("G2").value = offer.architect ? `Klient: ${offer.architect}` : "";
   ws.getCell("G2").font = { name: "Calibri", size: 10 };
   ws.getCell("G2").alignment = { horizontal: "right" };
 

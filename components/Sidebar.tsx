@@ -120,8 +120,7 @@ export function Sidebar({
         })}
 
         {user?.role === "admin" && (
-          <div className="mt-4 pt-4 border-t border-zinc-100">
-            <div className="px-4 mb-1 text-[10px] uppercase tracking-wider text-zinc-400">Admin</div>
+          <div className="mt-2">
             {ADMIN_NAV.map(({ href, label, icon: Icon, matchPrefix }) => {
               const isActive = matchPrefix
                 ? pathname.startsWith(matchPrefix)

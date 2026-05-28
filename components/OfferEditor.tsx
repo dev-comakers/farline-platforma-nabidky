@@ -239,11 +239,11 @@ export function OfferEditor({
             />
           </div>
           <div className="mt-3 flex items-center gap-2 text-sm text-zinc-500">
-            <span>Architekt:</span>
+            <span>Klient:</span>
             <input
               value={offer.architect}
               onChange={(e) => updateField("architect", e.target.value)}
-              placeholder="Jméno architekta / studio"
+              placeholder="Jméno klienta / studia"
               className="bg-transparent text-zinc-900 focus:outline-none flex-1 border-b border-transparent focus:border-zinc-200"
             />
             <CurrencyToggle
@@ -285,7 +285,7 @@ export function OfferEditor({
                   <th className="px-4 py-3 font-medium text-right">Po slevě</th>
                   <th className="px-2 py-3 font-medium text-center" title="Potvrzeno">P</th>
                   <th className="px-2 py-3 font-medium text-center" title="Objednáno">O</th>
-                  <th className="px-2 py-3 font-medium text-center" title="Získáno">Z</th>
+                  <th className="px-2 py-3 font-medium text-center" title="Doručeno">D</th>
                   <th className="w-8"></th>
                 </tr>
               </thead>
@@ -378,7 +378,7 @@ export function OfferEditor({
                         <StatusCheckbox
                           checked={item.received}
                           onChange={(v) => handleUpdateItem(item.id, { received: v })}
-                          title="Získáno"
+                          title="Doručeno"
                         />
                       </td>
                       <td className="px-2 py-3">
@@ -410,7 +410,7 @@ export function OfferEditor({
           <textarea
             value={offer.internalNote ?? ""}
             onChange={(e) => updateField("internalNote", e.target.value || null)}
-            placeholder="Soukromé poznámky — architekt je neuvidí."
+            placeholder="Soukromé poznámky — klient je neuvidí."
             className="w-full min-h-[80px] text-sm bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-400 resize-y"
           />
         </section>
@@ -422,7 +422,7 @@ export function OfferEditor({
               style={{ fontFamily: "var(--font-display)" }}
             >
               <ChatCircleDots size={16} weight="duotone" color="var(--accent)" />
-              Komentáře architekta ({offerComments.length})
+              Komentáře klienta ({offerComments.length})
             </h3>
             {offerComments.some((c) => c.isNew) && (
               <button

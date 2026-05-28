@@ -113,7 +113,7 @@ export function NabidkyClient({ offersWithTotals }: { offersWithTotals: OfferRow
           <thead>
             <tr className="text-left text-xs uppercase tracking-wider text-zinc-400">
               <th className="px-4 sm:px-6 py-3 font-medium">Akce</th>
-              <th className="px-4 sm:px-6 py-3 font-medium">Architekt</th>
+              <th className="px-4 sm:px-6 py-3 font-medium">Klient</th>
               <th className="px-4 sm:px-6 py-3 font-medium">Datum</th>
               <th className="px-4 sm:px-6 py-3 font-medium text-right">Položky</th>
               <th className="px-4 sm:px-6 py-3 font-medium text-right">Cena po slevě</th>

@@ -139,7 +139,7 @@ export async function exportOfferToPdf(offer: Offer, products: Product[]) {
   const lineH = 5;
   const meta: Array<[string, string]> = [
     ["AKCE", offer.name || "—"],
-    ["ARCHITEKT", offer.architect || "—"],
+    ["KLIENT", offer.architect || "—"],
     ["DATUM", formatDate(offer.updatedAt)],
     ["MĚNA", offer.currency],
   ];
