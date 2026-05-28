@@ -140,6 +140,12 @@ export function OfferEditor({
   };
 
   const handleAddItem = async (productId: string) => {
+    const existing = offer.items.find((i) => i.productId === productId);
+    if (existing) {
+      await handleUpdateItem(existing.id, { quantity: existing.quantity + 1 });
+      push("Množství zvýšeno");
+      return;
+    }
     const res = await fetch(`/api/offers/${offer.id}/items`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
