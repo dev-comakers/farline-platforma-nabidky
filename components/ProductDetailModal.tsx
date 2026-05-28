@@ -31,7 +31,10 @@ export function ProductDetailModal({
   const params = (product.parameters ?? {}) as Record<string, string>;
   const paramEntries = categoryFields
     .filter((f) => params[f.key] !== undefined && params[f.key] !== "")
-    .map((f) => ({ label: f.label, value: params[f.key] }));
+    .map((f) => ({
+      label: f.key === "zaruka" ? `${f.label} (rok)` : f.label,
+      value: params[f.key],
+    }));
 
   const allParams = [...paramEntries, { label: "Kód", value: product.code }];
 
@@ -108,6 +111,12 @@ export function ProductDetailModal({
                 {formatCurrency(product.unitPrice, product.currency)}
               </div>
             </div>
+
+            {product.description && (
+              <div className="mt-4 text-sm text-zinc-600 leading-relaxed">
+                {product.description}
+              </div>
+            )}
 
             <div className="mt-4 border-t border-zinc-100 pt-4">
               <table className="w-full text-sm">

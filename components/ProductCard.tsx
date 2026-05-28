@@ -1,6 +1,6 @@
 import { formatCurrency } from "@/lib/calculations";
 import type { Product } from "@/lib/types";
-import { ProductCardPhotoUploader } from "./PhotoUploader";
+import { ProductIconBox } from "./ProductIconBox";
 
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   return (
@@ -8,7 +8,9 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       className="group bg-white border border-zinc-200/70 rounded-2xl overflow-hidden hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 animate-fade-in-up"
       style={{ animationDelay: `${Math.min(index * 40, 480)}ms` }}
     >
-      <ProductCardPhotoUploader product={product} />
+      <div className="w-full aspect-[4/3] overflow-hidden bg-zinc-100">
+        <ProductIconBox type={product.type} size="lg" imageUrl={product.imageUrl} />
+      </div>
       <div className="px-4 py-4 relative">
         <div className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider">
           {product.code}

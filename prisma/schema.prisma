@@ -75,6 +75,7 @@ model Product {
   category           ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   unitPrice          Decimal         @db.Decimal(12, 2)
   currency           Currency        @default(CZK)
+  description        String?
   imagePath          String?
   technicalSheetPath String?
   parameters         Json            @default("{}")

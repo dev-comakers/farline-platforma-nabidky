@@ -50,12 +50,13 @@ export async function PATCH(req: NextRequest, { params }: RouteCtx) {
     }
   }
 
-  const { categoryId, parameters, ...rest } = parsed.data;
+  const { categoryId, parameters, description, ...rest } = parsed.data;
   const product = await prisma.product.update({
     where: { id },
     data: {
       ...rest,
       ...(parameters !== undefined ? { parameters: parameters as Record<string, string> } : {}),
+      ...(description !== undefined ? { description: description ?? null } : {}),
       ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
     },
     select: productSelect,

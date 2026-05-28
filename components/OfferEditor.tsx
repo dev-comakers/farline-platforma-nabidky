@@ -25,7 +25,7 @@ import {
   formatDateTime,
   formatRelative,
 } from "@/lib/calculations";
-import type { Comment, Currency, Offer, OfferItem, OfferStatus, Product } from "@/lib/types";
+import type { CategoryField, Comment, Currency, Offer, OfferItem, OfferStatus, Product, ProductCategory } from "@/lib/types";
 import { PhotoUploader } from "@/components/PhotoUploader";
 import { ProductDetailModal } from "@/components/ProductDetailModal";
 import { ProductCatalogPanel } from "@/components/ProductCatalogPanel";
@@ -44,12 +44,14 @@ export function OfferEditor({
   snapshotProducts,
   allProducts,
   initialComments,
+  categories = [],
   userRole = "manager",
 }: {
   initialOffer: Offer;
   snapshotProducts: Product[];
   allProducts: Product[];
   initialComments: Comment[];
+  categories?: ProductCategory[];
   userRole?: "admin" | "manager";
 }) {
   const router = useRouter();
@@ -61,6 +63,7 @@ export function OfferEditor({
   const [showCatalog, setShowCatalog] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showConfirmLock, setShowConfirmLock] = useState(false);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
 
@@ -193,6 +196,13 @@ export function OfferEditor({
     setComments((prev) => prev.map((c) => ({ ...c, isNew: false })));
   };
 
+  const locked = offer.status === "potvrzena";
+
+  const getCategoryFields = (product: Product): CategoryField[] => {
+    const cat = categories.find((c) => c.key === product.type);
+    return cat?.fields ?? [];
+  };
+
   const productsById = useMemo(
     () => new Map(products.map((p) => [p.id, p])),
     [products]
@@ -263,7 +273,8 @@ export function OfferEditor({
             </h2>
             <button
               onClick={() => setShowCatalog(true)}
-              className="btn-tactile inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+              disabled={locked}
+              className="btn-tactile inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-white disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ background: "var(--accent)" }}
             >
               <Plus size={14} weight="bold" /> Přidat z katalogu
@@ -339,6 +350,7 @@ export function OfferEditor({
                         <QtyStepper
                           value={item.quantity}
                           onChange={(q) => handleUpdateItem(item.id, { quantity: q })}
+                          disabled={locked}
                         />
                       </td>
                       <td className="px-2 py-3 text-right font-mono tabular-nums text-zinc-700 text-xs">
@@ -348,6 +360,7 @@ export function OfferEditor({
                         <DiscountInput
                           value={item.discountPercent}
                           onChange={(d) => handleUpdateItem(item.id, { discountPercent: d })}
+                          disabled={locked}
                         />
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -382,13 +395,15 @@ export function OfferEditor({
                         />
                       </td>
                       <td className="px-2 py-3">
-                        <button
-                          onClick={() => handleRemoveItem(item.id)}
-                          className="text-zinc-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50"
-                          aria-label="Odstranit"
-                        >
-                          <Trash size={14} />
-                        </button>
+                        {!locked && (
+                          <button
+                            onClick={() => handleRemoveItem(item.id)}
+                            className="text-zinc-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50"
+                            aria-label="Odstranit"
+                          >
+                            <Trash size={14} />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -495,12 +510,34 @@ export function OfferEditor({
               onClick={() => handleStatusChange("odeslana")}
             />
           )}
-          {(offer.status === "odeslana" || offer.status === "okomentovana") && (
+          {(offer.status === "odeslana" || offer.status === "okomentovana") && !showConfirmLock && (
             <ActionButton
               icon={CheckCircle}
               label="Označit jako potvrzené"
-              onClick={() => handleStatusChange("potvrzena")}
+              onClick={() => setShowConfirmLock(true)}
             />
+          )}
+          {showConfirmLock && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 space-y-2">
+              <p className="text-xs text-amber-800 leading-relaxed">
+                Potvrzením nabídky <strong>uzamknete editaci</strong> položek. Bude možné měnit pouze statusy (P / O / D).
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => { setShowConfirmLock(false); await handleStatusChange("potvrzena"); }}
+                  className="flex-1 btn-tactile px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                  style={{ background: "var(--accent)" }}
+                >
+                  Potvrdit
+                </button>
+                <button
+                  onClick={() => setShowConfirmLock(false)}
+                  className="flex-1 btn-tactile px-3 py-1.5 rounded-lg text-xs font-medium border border-zinc-200 text-zinc-700"
+                >
+                  Zrušit
+                </button>
+              </div>
+            </div>
           )}
           <ActionButton
             icon={FilePdf}
@@ -578,6 +615,7 @@ export function OfferEditor({
         onClose={() => setShowCatalog(false)}
         products={allProducts}
         currency={offer.currency}
+        categories={categories}
         onAdd={(pid) => {
           handleAddItem(pid);
           setShowCatalog(false);
@@ -591,6 +629,7 @@ export function OfferEditor({
       {detailProduct && (
         <ProductDetailModal
           product={detailProduct}
+          categoryFields={getCategoryFields(detailProduct)}
           onClose={() => setDetailProduct(null)}
         />
       )}
@@ -616,13 +655,14 @@ function CurrencyToggle({ value, onChange }: { value: Currency; onChange: (c: Cu
   );
 }
 
-function QtyStepper({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+function QtyStepper({ value, onChange, disabled }: { value: number; onChange: (n: number) => void; disabled?: boolean }) {
   return (
-    <div className="inline-flex items-center bg-zinc-50 border border-zinc-200 rounded-md">
+    <div className={`inline-flex items-center bg-zinc-50 border border-zinc-200 rounded-md ${disabled ? "opacity-40 pointer-events-none" : ""}`}>
       <button
         onClick={() => onChange(Math.max(1, value - 1))}
         className="w-6 h-7 text-zinc-500 hover:text-zinc-900"
         aria-label="−"
+        disabled={disabled}
       >
         −
       </button>
@@ -633,12 +673,14 @@ function QtyStepper({ value, onChange }: { value: number; onChange: (n: number) 
           const n = parseInt(e.target.value, 10);
           onChange(Number.isFinite(n) && n > 0 ? n : 1);
         }}
+        disabled={disabled}
         className="w-9 text-center bg-transparent text-sm font-mono tabular-nums focus:outline-none"
       />
       <button
         onClick={() => onChange(value + 1)}
         className="w-6 h-7 text-zinc-500 hover:text-zinc-900"
         aria-label="+"
+        disabled={disabled}
       >
         +
       </button>
@@ -646,9 +688,9 @@ function QtyStepper({ value, onChange }: { value: number; onChange: (n: number) 
   );
 }
 
-function DiscountInput({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+function DiscountInput({ value, onChange, disabled }: { value: number; onChange: (n: number) => void; disabled?: boolean }) {
   return (
-    <div className="inline-flex items-center bg-zinc-50 border border-zinc-200 rounded-md px-2">
+    <div className={`inline-flex items-center bg-zinc-50 border border-zinc-200 rounded-md px-2 ${disabled ? "opacity-40 pointer-events-none" : ""}`}>
       <input
         type="number"
         min={0}
@@ -659,6 +701,7 @@ function DiscountInput({ value, onChange }: { value: number; onChange: (n: numbe
           if (!Number.isFinite(n)) { onChange(0); return; }
           onChange(Math.max(0, Math.min(100, n)));
         }}
+        disabled={disabled}
         className="w-10 text-right bg-transparent text-sm font-mono tabular-nums focus:outline-none py-1"
       />
       <span className="text-xs text-zinc-400">%</span>

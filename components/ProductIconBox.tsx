@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { productIcon } from "@/lib/productIcons";
 import type { ProductType } from "@/lib/types";
 
@@ -14,6 +14,7 @@ export function ProductIconBox({
   imageUrl?: string | null;
 }) {
   const [imgError, setImgError] = useState(false);
+  useEffect(() => { setImgError(false); }, [imageUrl]);
   const Icon = productIcon[type] ?? productIcon["ostatni"];
   const dims = {
     xs: { box: "w-9 h-9 rounded-md", icon: 16 },

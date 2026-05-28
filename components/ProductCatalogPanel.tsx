@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { MagnifyingGlass, X, Plus } from "@phosphor-icons/react/dist/ssr";
-import type { Product, Currency } from "@/lib/types";
+import type { CategoryField, Product, Currency, ProductCategory } from "@/lib/types";
 import { formatCurrency, normalizeText } from "@/lib/calculations";
 import { ProductIconBox } from "./ProductIconBox";
 import { ProductDetailModal } from "./ProductDetailModal";
@@ -12,17 +12,24 @@ export function ProductCatalogPanel({
   onClose,
   products,
   currency,
+  categories = [],
   onAdd,
 }: {
   open: boolean;
   onClose: () => void;
   products: Product[];
   currency: Currency;
+  categories?: ProductCategory[];
   onAdd: (productId: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [brand, setBrand] = useState<string | null>(null);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+
+  const getCategoryFields = (product: Product): CategoryField[] => {
+    const cat = categories.find((c) => c.key === product.type);
+    return cat?.fields ?? [];
+  };
 
   const brands = useMemo(
     () => Array.from(new Set(products.map((p) => p.brand))).sort(),
@@ -159,6 +166,7 @@ export function ProductCatalogPanel({
       {detailProduct && (
         <ProductDetailModal
           product={detailProduct}
+          categoryFields={getCategoryFields(detailProduct)}
           onClose={() => setDetailProduct(null)}
           onAdd={(productId) => {
             onAdd(productId);

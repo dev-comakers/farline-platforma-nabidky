@@ -12,7 +12,7 @@ async function uploadPhoto(productId: string, file: File): Promise<string | null
   const res = await fetch(`/api/products/${productId}/photo`, { method: "POST", body: formData });
   if (!res.ok) return null;
   const data = await res.json();
-  return data.imagePath ? `/api/uploads/${data.imagePath}` : null;
+  return data.imagePath ? `/api/uploads/${data.imagePath}?t=${Date.now()}` : null;
 }
 
 export function PhotoUploader({

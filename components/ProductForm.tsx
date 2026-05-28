@@ -39,6 +39,8 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
   const [unitPrice, setUnitPrice] = useState("");
   const [currency, setCurrency] = useState<"CZK" | "USD" | "EUR">("CZK");
   const [params, setParams] = useState<Record<string, string>>({});
+  const [description, setDescription] = useState("");
+  const [showDescription, setShowDescription] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -60,11 +62,15 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
       setUnitPrice(String(product.unitPrice));
       setCurrency(product.currency);
       setParams(product.parameters ?? {});
+      const desc = product.description ?? "";
+      setDescription(desc);
+      setShowDescription(!!desc);
       setImageFile(null);
       setImagePreview(product.imageUrl ?? null);
     } else {
       setCode(""); setName(""); setBrand(""); setDecor("");
       setCategoryId(""); setUnitPrice(""); setCurrency("CZK"); setParams({});
+      setDescription(""); setShowDescription(false);
       setImageFile(null);
       setImagePreview(null);
     }
@@ -101,7 +107,7 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
 
     setBusy(true);
     try {
-      const body = { code, name, brand, decor, categoryId, unitPrice: price, currency, parameters: params };
+      const body = { code, name, brand, decor, categoryId, unitPrice: price, currency, parameters: params, description: description || null };
       const url = product ? `/api/products/${product.id}` : "/api/products";
       const method = product ? "PATCH" : "POST";
 
@@ -122,7 +128,7 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
         const imgRes = await fetch(`/api/products/${savedProduct.id}/photo`, { method: "POST", body: fd });
         if (imgRes.ok) {
           const imgData = await imgRes.json();
-          savedProduct = { ...savedProduct, imageUrl: imgData.imagePath ? `/api/uploads/${imgData.imagePath}` : null };
+          savedProduct = { ...savedProduct, imageUrl: imgData.imagePath ? `/api/uploads/${imgData.imagePath}?t=${Date.now()}` : null };
         } else {
           push("Foto se nepodařilo uložit (produkt byl uložen bez fotografie)", "info");
         }
@@ -272,6 +278,29 @@ export function ProductForm({ open, onClose, product, onSaved }: ProductFormProp
               </div>
             </div>
           )}
+
+          <div>
+            {showDescription ? (
+              <label className="block">
+                <span className="text-xs text-zinc-500 uppercase tracking-wider">Popis</span>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Krátký popis produktu…"
+                  rows={3}
+                  className={inputCls + " resize-none"}
+                />
+              </label>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowDescription(true)}
+                className="text-xs text-zinc-500 hover:text-zinc-900 underline underline-offset-2"
+              >
+                + Přidat popis
+              </button>
+            )}
+          </div>
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 rounded-lg">

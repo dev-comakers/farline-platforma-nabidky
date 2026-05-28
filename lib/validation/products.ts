@@ -9,6 +9,7 @@ export const createProductSchema = z.object({
   unitPrice: z.number().positive(),
   currency: z.enum(["CZK", "USD", "EUR"]).default("CZK"),
   parameters: z.record(z.string(), z.string()).default({}),
+  description: z.string().max(2000).nullish(),
 });
 
 export const updateProductSchema = z.object({
@@ -20,4 +21,5 @@ export const updateProductSchema = z.object({
   unitPrice: z.number().positive().optional(),
   currency: z.enum(["CZK", "USD", "EUR"]).optional(),
   parameters: z.record(z.string(), z.string()).optional(),
+  description: z.string().max(2000).nullish(),
 });

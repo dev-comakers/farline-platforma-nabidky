@@ -48,6 +48,7 @@ export interface Product {
   type: ProductType;
   unitPrice: number;
   currency: Currency;
+  description?: string | null;
   imageUrl: string | null;
   technicalSheetUrl: string | null;
   parameters: Record<string, string>;

@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
       unitPrice: parsed.data.unitPrice,
       currency: parsed.data.currency,
       parameters: parsed.data.parameters as Record<string, string>,
+      ...(parsed.data.description != null ? { description: parsed.data.description } : {}),
     },
     select: productSelect,
   });
