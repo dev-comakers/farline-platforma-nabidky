@@ -109,7 +109,7 @@ export function Sidebar({
               <span className="flex-1">{label}</span>
               {showBadge && (
                 <span
-                  className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-semibold text-white"
+                  className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-semibold leading-none tabular-nums text-white"
                   style={{ background: "var(--accent)" }}
                 >
                   {newCommentsCount}

@@ -38,6 +38,8 @@ export function ProductDetailModal({
 
   const allParams = [...paramEntries, { label: "Kód", value: product.code }];
 
+  const sheetVisible = !hideSheet && (allowUpload || !!sheetUrl);
+
   const handleSheetUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -134,7 +136,7 @@ export function ProductDetailModal({
         </div>
 
         {/* Technický list */}
-        {!hideSheet && (allowUpload || sheetUrl) && (
+        {sheetVisible && (
           <div className="px-6 py-4 border-t border-zinc-100">
             <div className="text-xs text-zinc-500 mb-2">Technický list</div>
             {allowUpload ? (
@@ -189,7 +191,7 @@ export function ProductDetailModal({
 
         {/* CTA */}
         {onAdd && (
-          <div className="px-6 pb-6">
+          <div className={`px-6 pb-6 ${sheetVisible ? "pt-2" : "pt-5 border-t border-zinc-100"}`}>
             <button
               onClick={() => { onAdd(product.id); onClose(); }}
               className="btn-tactile w-full py-3 rounded-xl text-sm font-medium text-white"

@@ -7,9 +7,9 @@ export function normalizeText(s: string): string {
 }
 
 const EXCHANGE_RATES: Record<Currency, Record<Currency, number>> = {
-  CZK: { CZK: 1,     USD: 0.043, EUR: 0.040 },
-  USD: { CZK: 23.3,  USD: 1,     EUR: 0.92  },
-  EUR: { CZK: 25.0,  USD: 1.09,  EUR: 1     },
+  CZK: { CZK: 1,    USD: 0.04,   EUR: 0.0345 },
+  USD: { CZK: 25,   USD: 1,      EUR: 0.8621 },
+  EUR: { CZK: 29,   USD: 1.16,   EUR: 1      },
 };
 
 export function convertCurrency(amount: number, from: Currency, to: Currency): number {
